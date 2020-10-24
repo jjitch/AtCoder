@@ -31,4 +31,9 @@ int main()
     {
         cout << dq[i] << endl;
     }
+    for (auto e:dq)
+    {
+        cout << e << endl;
+    }
+    
 }
