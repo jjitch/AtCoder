@@ -45,19 +45,35 @@ public:
                 rank[x]++;
         }
     }
+    bool same(ll x, ll y)
+    {
+        return find(x) == find(y);
+    }
+    int show_rank(ll x){
+        return rank[x];
+    }
 };
 
 int main()
 {
-    ll n=10;
+    ll n = 10;
     UnionFind *uf = new UnionFind(n);
-    cout << uf->find(3) << endl;
-    uf->unite(0, 1);
-    uf->unite(0,2);
+    uf->unite(0,1);
+    uf->unite(1,2);
+    uf->unite(2,3);
+    uf->unite(4,5);
+    uf->unite(5,6);
     for (auto i = 0; i < n; i++)
     {
-        cout << uf->find(i) << endl;
+        cout << "par " << uf->find(i) << endl;
+        cout << "rank " << uf->show_rank(i) << endl;
     }
-    
+    cout << "-----" << endl;
+    uf->unite(0,4);
+    for (auto i = 0; i < n; i++)
+    {
+        cout << "par " << uf->find(i) << endl;
+        cout << "rank " << uf->show_rank(i) << endl;
+    }
     delete uf;
 }
