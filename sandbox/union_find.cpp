@@ -28,11 +28,36 @@ public:
             return par[x] = find(par[x]);
         }
     }
+    void unite(ll x, ll y)
+    {
+        x = find(x);
+        y = find(y);
+        if (x == y)
+            return;
+        if (rank[x] < rank[y])
+        {
+            par[x] = y;
+        }
+        else
+        {
+            par[y] = x;
+            if (rank[x] == rank[y])
+                rank[x]++;
+        }
+    }
 };
 
 int main()
 {
-    UnionFind *uf = new UnionFind(10);
+    ll n=10;
+    UnionFind *uf = new UnionFind(n);
     cout << uf->find(3) << endl;
+    uf->unite(0, 1);
+    uf->unite(0,2);
+    for (auto i = 0; i < n; i++)
+    {
+        cout << uf->find(i) << endl;
+    }
+    
     delete uf;
 }
