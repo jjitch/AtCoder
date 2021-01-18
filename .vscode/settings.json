@@ -1,6 +1,7 @@
 {
-    "python.pythonPath": "C:\\Users\\junno\\AppData\\Local\\Programs\\Python\\Python39\\python.exe",
+    "python.pythonPath": "C:\\Program Files\\Python37\\python.exe",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
-    "python.linting.flake8Enabled": false
+    "python.linting.flake8Enabled": false,
+    "python.linting.pylintPath": "C:\\Users\\Junnosuke_fortek\\AppData\\Roaming\\Python\\Python37\\Scripts"
 }
