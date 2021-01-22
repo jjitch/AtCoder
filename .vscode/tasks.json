@@ -17,7 +17,8 @@
             "problemMatcher": [
                 "$gcc"
             ],
-            "group": "build"
+            "group": "build",
+            "dependsOrder": "sequence"
         },
         {
             "type": "shell",
@@ -25,7 +26,21 @@
             "command": "${fileDirname}\\${fileBasenameNoExtension}",
             "problemMatcher": [
                 "$gcc"
-            ]
+            ],
+            "dependsOrder": "sequence"
+        },
+        {
+            "label": "C/C++: build and run",
+            "type": "shell",
+            "command": "echo built_and_ran",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "C/C++: g++.exe build active file",
+                "execute active file"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
         },
         {
             "type": "cppbuild",
