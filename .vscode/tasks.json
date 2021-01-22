@@ -18,7 +18,15 @@
                 "$gcc"
             ],
             "group": "build",
-            "dependsOrder": "sequence"
+            "dependsOrder": "sequence",
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            },
         },
         {
             "type": "shell",
@@ -27,12 +35,20 @@
             "problemMatcher": [
                 "$gcc"
             ],
-            "dependsOrder": "sequence"
+            "dependsOrder": "sequence",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
         },
         {
             "label": "C/C++: build and run",
             "type": "shell",
-            "command": "echo built_and_ran",
+            "command": "echo =========================================",
             "dependsOrder": "sequence",
             "dependsOn": [
                 "C/C++: g++.exe build active file",
@@ -41,6 +57,14 @@
             "problemMatcher": [
                 "$gcc"
             ],
+            "presentation": {
+                "echo": false,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": false
+            }
         },
         {
             "type": "cppbuild",
