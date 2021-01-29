@@ -1,26 +1,31 @@
 #include <bits/stdc++.h>
 using namespace std;
 using ll = long long;
+#define LARGE 2000000000
+#define max(a, b) a > b ? a : b
+#define min(a, b) a < b ? a : b
 
-ll seek_sum(int t,vector<ll> a) {
-    
+ll seek_sum(int t, vector<ll> a)
+{
 }
 
-int main() {
+int main()
+{
     int n;
-    ll ans=0;
+    int ans = 0;
     cin >> n;
-    vector<ll> a(10009);
-    for (int i=0; i < n;i++)
+    vector<int> a(n);
+
+    for (int i = 0; i < n; i++)
     {
         cin >> a[i];
     }
-    for (int i=0; i < n; i++)
+    for (int l = 0; l < n; l++)
     {
-        cout << a[i] << endl;
-    }
-    for (int i; i <= n;i++) {
-        ll sus = seek_sum(i, a);
-        ans = sus > ans ? sus : ans;
+        int m = LARGE;
+        for (int r = l; r < n; r++)
+        {
+            m = min(m, a[r]);
+        }
     }
 }
