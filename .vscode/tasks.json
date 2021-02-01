@@ -87,6 +87,11 @@
                 "isDefault": true
             },
             "detail": "デバッガーによって生成されたタスク。"
+        },
+        {
+            "type": "shell",
+            "command": "echo 111",
+            "label": "test"
         }
     ]
 }
