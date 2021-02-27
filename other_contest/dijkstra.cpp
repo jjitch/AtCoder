@@ -1,6 +1,9 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+using ll = long long;
+#define rep(i, n) for (int i = 0; i < (n); i++)
+
 struct Edge
 {
     long long to;
@@ -46,5 +49,19 @@ int main()
 {
     int v, e, s;
     cin >> v >> e >> s;
-    Graph g;
+    Graph g(v, vector<Edge>());
+    rep(i, e)
+    {
+        int s, t;
+        long long d;
+        cin >> s >> t >> d;
+        g[s].push_back(Edge{t, d});
+    }
+    vector<ll> dis;
+    dijkstra(g, s, dis);
+    for (ll v : dis)
+    {
+        cout << v << " ";
+    }
+    cout << endl;
 }
