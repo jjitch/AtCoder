@@ -4,19 +4,16 @@ using ll = long long;
 #define rep(i,n) for (int i = 0; i < (n); i++)
 
 int main() {
-    int n;
+    ll n;
     cin >> n;
-    vector<int> a(n);
+    ll cum = 0;
+    ll sq_cum = 0;
     rep(i,n){
-        cin >> a[i];
+        ll a;
+        cin >> a;
+        cum += a;
+        sq_cum += a * a;
     }
-    vector<ll> cum(n);
-    rep(i,n){
-        if (i==0){
-            cum[i] = a[i];
-            continue;
-        }
-        cum[i] = cum[i - 1] + a[i];
-    }
-    
+    ll ans = n * sq_cum - cum * cum;
+    cout << ans << endl;
 }
