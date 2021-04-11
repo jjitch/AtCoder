@@ -5,32 +5,32 @@ using ll = long long;
 
 int main()
 {
-    int m;
-    cin >> m;
+    int assignment;
+    cin >> assignment;
     int v;
-    if (m < 100)
+    if (assignment < 100)
     {
         v = 0;
     }
-    else if (m >= 100 and m <= 5000)
+    else if (assignment >= 100 and assignment <= 5000)
     {
-        m *= 10;
-        v = m / 1000;
+        assignment *= 10;
+        v = assignment / 1000;
     }
-    else if (m >= 6000 and m <= 30000)
+    else if (assignment >= 6000 and assignment <= 30000)
     {
-        m /= 1000;
-        v = m + 50;
+        assignment /= 1000;
+        v = assignment + 50;
     }
-    else if (m >= 35000 and m <= 70000)
+    else if (assignment >= 35000 and assignment <= 70000)
     {
-        m -= 30000;
-        m /= 5;
-        m += 80000;
-        m /= 1000;
-        v = m;
+        assignment -= 30000;
+        assignment /= 5;
+        assignment += 80000;
+        assignment /= 1000;
+        v = assignment;
     }
-    else if (m > 70)
+    else if (assignment > 70)
     {
         v = 89;
     }
