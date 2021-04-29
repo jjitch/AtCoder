@@ -9,7 +9,8 @@
                 "-g",
                 "${file}",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                //"${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "debug\\out.exe"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
@@ -30,8 +31,8 @@
         },
         {
             "type": "shell",
-            "label": "execute active file",
-            "command": "${fileDirname}\\${fileBasenameNoExtension}",
+            "label": "execute the latest program",
+            "command": ".\\debug\\out.exe",
             "problemMatcher": [
                 "$gcc"
             ],
@@ -52,7 +53,7 @@
             "dependsOrder": "sequence",
             "dependsOn": [
                 "C/C++: g++.exe build active file",
-                "execute active file"
+                "execute the latest program"
             ],
             "problemMatcher": [
                 "$gcc"
