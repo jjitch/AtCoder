@@ -76,4 +76,5 @@
         "typeinfo": "cpp",
         "valarray": "cpp"
     },
+    "C_Cpp.clang_format_style": "{ BasedOnStyle: Microsoft, AllowShortBlocksOnASingleLine: Always, AllowShortCaseLabelsOnASingleLine: true, AllowShortFunctionsOnASingleLine: All, AllowShortIfStatementsOnASingleLine: Always}"
 }
