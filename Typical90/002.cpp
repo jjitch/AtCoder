@@ -2,8 +2,8 @@
 using namespace std;
 using ll = long long;
 #define rep(i, n) for (int i = 0; i < (n); i++)
-constexpr ll INFLL = 1LL << 62LL;
-ll powll(ll, ll, ll = INFLL);
+constexpr ll INF64 = 1LL << 62LL;
+ll powll(ll, ll, ll = INF64);
 
 int main()
 {

@@ -2,8 +2,8 @@
 using namespace std;
 using i64 = long long;
 #define rep(i, n) for (i64 i = 0; i < (n); i++)
-constexpr i64 INFLL = 1LL << 62LL;
-i64 powll(i64, i64, i64 = INFLL);
+constexpr i64 INF64 = 1LL << 62LL;
+i64 powll(i64, i64, i64 = INF64);
 inline i64 gcd(i64, i64);
 
 int main()
