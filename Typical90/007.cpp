@@ -8,28 +8,34 @@ inline i64 gcd(i64, i64);
 template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
 
-constexpr i64 sum_v_MAX = 100050;
-constexpr i64 N_MAX = 110;
 
 int main()
 {
-    i64 n, W;
-    cin >> n >> W;
-    vector<i64> w(n), v(n);
-    rep(i, n) cin >> w[i] >> v[i];
-    vector<vector<i64>> dp(N_MAX, vector<i64>(sum_v_MAX, INFLL));
-    dp[0][0] = 0;
-    rep(i, n) rep(sum_v, sum_v_MAX)
+    i64 n;
+    cin>>n;
+    vector<i64> a(n);
+    rep(i,n) cin>>a[i];
+    sort(a.begin(),a.end());
+    i64 q;
+    cin>>q;
+    i64 b;
+    while (q>0)
     {
-        chmin(dp[i + 1][sum_v], dp[i][sum_v]);
-        if (sum_v + v[i] < sum_v_MAX) chmin(dp[i + 1][sum_v + v[i]], dp[i][sum_v] + w[i]);
+        cin>>b;
+        auto low = lower_bound(a.begin(),a.end(),b);
+        i64 i = distance(a.begin(), low);
+        if (i==0)
+        {
+            cout<<a[0]-b<<endl;
+        } else if (i==n)
+        {
+            cout<<b-a[n-1]<<endl;
+        }else{
+            cout<<min(abs(a[i]-b),abs(b-a[i-1]))<<endl;
+        }
+        q--;
     }
-    i64 ans = 0;
-    rep(sum_v, sum_v_MAX)
-    {
-        if (dp[n][sum_v] <= W) ans = sum_v;
-    }
-    cout << ans << endl;
+    
 }
 
 i64 modpow(i64 base, i64 exp, i64 mod)
