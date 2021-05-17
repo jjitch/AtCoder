@@ -20,19 +20,14 @@ int main()
 {
     IN_i64(n);
     IN_i64(q);
-    fenwick_tree<i64> fw(n);
-    rep(i, n)
+    dsu d(n);
+    rep(i, q)
     {
-        IN_i64(a);
-        fw.add(i, a);
-    }
-    rep(i, q) {
         IN_i64(t);
-        IN_i64(x);
-        IN_i64(y);
-        if (t == 0) fw.add(x, y);
-        else
-            cout << fw.sum(x, y) << endl;
+        IN_i64(u);
+        IN_i64(v);
+        if (t == 0) d.merge(u, v);
+        if (t == 1) cout << d.same(u, v) << endl;
     }
 }
 
