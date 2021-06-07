@@ -1,7 +1,5 @@
-#include <atcoder/all>
 #include <bits/stdc++.h>
 using namespace std;
-using namespace atcoder;
 using i64 = long long;
 #define rep(i, n) for (i64 i = 0; i < (n); i++)
 #define IN_i64(n) \
@@ -18,14 +16,31 @@ template <class T> inline bool chmin(T &a, T b);
 
 constexpr int n_max = 100009;
 constexpr int s_max = 10;
-int **dp[n_max][s_max];
+int dp[n_max][s_max];
 
 int main()
 {
     IN_i64(N);
     string s;
+    string name = "_atcoder";
     cin >> s;
+    s = "_" + s;
     rep(i, n_max) rep(j, s_max) dp[i][j] = 0;
+    dp[0][0] = 1;
+    for (int i = 0; i < N; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            if (name[j + 1] == s[i + 1])
+            {
+                dp[i + 1][j + 1] += dp[i][j];
+                dp[i + 1][j + 1] %= 1000000007;
+            }
+            dp[i + 1][j] += dp[i][j];
+            dp[i + 1][j] %= 1000000007;
+        }
+    }
+    cout << dp[N][7] << endl;
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
