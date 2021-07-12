@@ -19,9 +19,8 @@ struct WeightedEdge
     i64 from;
     i64 to;
     i64 cost;
-    WeightedEdge(i64 _to, i64 _cost, i64 _from) : to(_to), cost(_cost), from(_from) {}
+    WeightedEdge(i64 _from, i64 _to, i64 _cost) : from(_from), to(_to), cost(_cost) {}
 };
-
 
 int main()
 {
@@ -29,27 +28,52 @@ int main()
     IN_i64(e);
     IN_i64(r);
     vector<WeightedEdge> G;
-    size_t cnt(0);
+    i64 cnt(0);
     vector<i64> dist(v, INF64);
-    for (size_t i = 0; i < e;i++){
+    for (size_t i = 0; i < e; i++)
+    {
         IN_i64(s);
         IN_i64(t);
         IN_i64(d);
         G.emplace_back(s, t, d);
     }
+    dist[r] = 0;
+    while (true)
+    {
+        bool updated(false);
+        for (const WeightedEdge &g : G)
+        if (dist[g.from]!=INF64)
+            updated |= chmin(dist[g.to], dist[g.from] + g.cost);
+        if (!updated) break;
+        cnt++;
+        if (cnt == v)
+        {
+            cout << "NEGATIVE CYCLE" << endl;
+            return 0;
+        }
+    }
+    for (i64 d : dist)
+    {
+        if (d == INF64)
+        {
+            cout << "INF" << endl;
+            continue;
+        }
+        cout << d << endl;
+    }
 }
 
-i64 modpow(i64 base, i64 ex, i64 mod)
+i64 modpow(i64 base, i64 pwr, i64 mod)
 {
     i64 ans = 1;
-    while (ex > 0)
+    while (pwr > 0)
     {
-        if (ex % 2 == 1)
+        if (pwr % 2 == 1)
         {
             ans *= base;
             ans %= mod;
         }
-        ex /= 2;
+        pwr /= 2;
         base *= base;
         base %= mod;
     }
