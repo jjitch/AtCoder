@@ -2,5 +2,7 @@ BasedOnStyle: Microsoft
 AllowShortBlocksOnASingleLine: Empty
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: Always
+AllowShortIfStatementsOnASingleLine: WithoutElse
 AlignEscapedNewlines: DontAlign
+UseTab: Always
+TabWidth: 4
