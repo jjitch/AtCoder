@@ -43,15 +43,16 @@ struct UnionFind
 		return r;
 	}
 	bool isSame(size_t a, size_t b) { return find(a) == find(b); }
-	void unite(size_t a, size_t b)
+	bool unite(size_t a, size_t b)
 	{
-		if (isSame(a, b)) return;
+		if (isSame(a, b)) return false;
 		const size_t root_a(find(a));
 		const size_t root_b(find(b));
 		const size_t high = rank[root_a] > rank[root_b] ? root_a : root_b;
 		const size_t lower = rank[root_a] > rank[root_b] ? root_b : root_a;
 		chmax(rank[high], rank[lower] + 1);
 		root[lower] = high;
+		return true;
 	}
 };
 
@@ -61,6 +62,8 @@ int main()
 	IN_i64(e);
 	IN_i64(r);
 	vector<vector<WeightedEdge>> Graph(v, vector<WeightedEdge>());
+	vector<i64> compress(v), visited(v);
+	rep(i, v) compress[i] = i;
 	UnionFind uf(v);
 	rep(i, e)
 	{
@@ -68,6 +71,14 @@ int main()
 		IN_i64(t);
 		IN_i64(w);
 		Graph[t].emplace_back(s, t, w);
+	}
+	while (true)
+	{
+		i64 vertex;
+		rep(i, v)
+		{
+			if (!visited[i]) vertex = i;
+		}
 	}
 }
 
