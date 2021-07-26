@@ -1,6 +1,6 @@
 #define _USE_MATH_DEFINES
-#include <bits/stdc++.h>
 #include <atcoder/all>
+#include <bits/stdc++.h>
 using namespace atcoder;
 using namespace std;
 using i64 = long long;
@@ -22,12 +22,24 @@ inline i64 gcd(i64, i64);
 template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
 
+struct vec
+{
+	double x, y;
+};
+
 int main()
 {
 	double n, x0, y0, xop, yop;
 	cin >> n >> x0 >> y0 >> xop >> yop;
-	double theta(M_PI);
-	cout << theta << endl;
+	vec centor, ans, opposite;
+	centor.x = (x0 + xop) / 2.;
+	centor.y = (y0 + yop) / 2.;
+	opposite.x = (xop - x0) / 2.;
+	opposite.y = (yop - y0) / 2.;
+	double theta(M_PI * (n - 2.) / n);
+	ans.x = centor.x + opposite.x * cos(-theta) - opposite.y * sin(-theta);
+	ans.y = centor.y + opposite.x * sin(-theta) + opposite.y * cos(-theta);
+	cout << setprecision(11) << fixed << ans.x << " " << ans.y << endl;
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
