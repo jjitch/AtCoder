@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <bits/stdc++.h>
 
 #include <atcoder/all>
@@ -25,11 +26,15 @@ template <class T> inline bool chmin(T &a, T b);
 int main()
 {
 	IN_i64(n);
-	fenwick_tree<int> ft(100010);
+	set<string> users;
 	REP(i, n)
 	{
-		IN_i64(m);
-		REP(j, m) { IN_i64 }
+		string s;
+		cin >> s;
+		size_t pre = users.size();
+		users.insert(s);
+		size_t post = users.size();
+		if (post - pre) cout << i + 1 << endl;
 	}
 }
 

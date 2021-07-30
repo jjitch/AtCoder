@@ -25,12 +25,17 @@ template <class T> inline bool chmin(T &a, T b);
 int main()
 {
 	IN_i64(n);
-	fenwick_tree<int> ft(100010);
-	REP(i, n)
+	IN_i64(a);
+	IN_i64(b);
+	IN_i64(c);
+	i64 ans = INF64;
+	constexpr i64 MI = 10000;
+	REP(i, MI) REP(j, MI)
 	{
-		IN_i64(m);
-		REP(j, m) { IN_i64 }
+		if (i + j >= MI || a * i + b * j > n) break;
+		if ((n - (a * i + b * j)) % c == 0) { chmin(ans, i + j + (n - (a * i + b * j)) / c); }
 	}
+	cout << ans << endl;
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)

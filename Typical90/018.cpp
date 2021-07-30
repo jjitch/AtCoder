@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <bits/stdc++.h>
 
 #include <atcoder/all>
@@ -24,12 +25,17 @@ template <class T> inline bool chmin(T &a, T b);
 
 int main()
 {
-	IN_i64(n);
-	fenwick_tree<int> ft(100010);
-	REP(i, n)
+	double T, L, X, Y;
+	cin >> T >> L >> X >> Y;
+	IN_i64(q);
+	REP(i, q)
 	{
-		IN_i64(m);
-		REP(j, m) { IN_i64 }
+		double E;
+		cin >> E;
+		double PH = L / 2. - L / 2. * cos(2. * M_PI * E / T);
+		double XH = sqrt(X * X + (Y + L / 2. * sin(2. * M_PI * E / T)) * (Y + L / 2. * sin(2. * M_PI * E / T)));
+		double ans = atan2(PH, XH) * 180. / M_PI;
+		cout << setprecision(12) << fixed << ans << endl;
 	}
 }
 

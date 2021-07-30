@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <bits/stdc++.h>
 
 #include <atcoder/all>
@@ -25,12 +26,15 @@ template <class T> inline bool chmin(T &a, T b);
 int main()
 {
 	IN_i64(n);
-	fenwick_tree<int> ft(100010);
-	REP(i, n)
-	{
-		IN_i64(m);
-		REP(j, m) { IN_i64 }
-	}
+	IN_i64(k);
+	IN_vi(a, n);
+	IN_vi(b, n);
+	i64 c = 0;
+	REP(i, n) { c += abs(a[i] - b[i]); }
+	if ((k - c) % 2 == 0 && k - c >= 0)
+		cout << "Yes" << endl;
+	else
+		cout << "No" << endl;
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
