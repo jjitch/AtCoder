@@ -4,5 +4,6 @@ AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: WithoutElse
 AlignEscapedNewlines: DontAlign
+AccessModifierOffset: -4
 UseTab: Always
 TabWidth: 4
