@@ -56,6 +56,7 @@ private:
 		{
 			digit.pop_back();
 		}
+		if (digit.size() == 1 && digit[0] == 0) neg = false;
 	}
 
 public:
@@ -63,9 +64,11 @@ public:
 	explicit BigInt(string &&s) : neg(s[0] == '-')
 	{
 		for_each(s.crbegin(), s.crend() - neg, [&](const char &c) { digit.push_back(c - '0'); });
+		if (digit.size() == 1 && digit[0] == 0) neg = false;
 	}
 	explicit BigInt(i64 &&i) : neg(i < 0)
 	{
+		if (i == 0) digit.push_back(0);
 		if (neg) i = -i;
 		while (i > 0)
 		{
@@ -179,6 +182,11 @@ int main()
 	assert(b(-70) == (b(30) -= b(100)));
 	assert(b(88) == b(48) + b(40));
 	assert(b(8) == b(48) - b(40));
+	assert(b("20000000000000000000000000000000000000000000000000000000000000000000") ==
+		   b("10000000000000000000000000000000000000000000000000000000000000000000") +
+			   b("10000000000000000000000000000000000000000000000000000000000000000000"));
+	assert(b("-0") == b("0"));
+	assert(b(0) == b(-0));
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
