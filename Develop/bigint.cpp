@@ -30,7 +30,7 @@ private:
 	bool neg;
 	void carry_and_fix()
 	{
-		size_t n(digit.size());
+		const size_t n(digit.size());
 		REP(i, n - 1)
 		{
 			if (digit[i] >= 10)
@@ -58,6 +58,64 @@ private:
 		}
 		if (digit.size() == 1 && digit[0] == 0) neg = false;
 	}
+	size_t ceil_pow(const size_t i)
+	{
+		size_t n = 1;
+		while (i > n)
+		{
+			n <<= 1;
+		}
+		return n;
+	}
+	vector<complex<double>> dft(const vector<complex<double>> &f)
+	{
+		if (f.size() == 1) return f;
+		const size_t n(f.size());
+		vector<complex<double>> f0;
+		vector<complex<double>> f1;
+		for (size_t i = 0; i < n; i++)
+		{
+			if (i % 2 == 0)
+				f0.push_back(f[i]);
+			else
+				f1.push_back(f[i]);
+		}
+		vector<complex<double>> dft0 = dft(f0);
+		vector<complex<double>> dft1 = dft(f1);
+		complex<double> zeta(cos(2. * M_PI / static_cast<double>(n)), sin(2. * M_PI / static_cast<double>(n)));
+		complex<double> zeta_pow(1., 0.);
+		vector<complex<double>> ret(n);
+		for (size_t i = 0; i < n; i++)
+		{
+			ret[i] = f0[i % (n / 2)] + zeta_pow * f1[i % (n / 2)];
+			zeta_pow *= zeta;
+		}
+		return ret;
+	}
+	vector<complex<double>> inverse_dft(const vector<complex<double>> &f)
+	{
+		if (f.size() == 1) return f;
+		size_t n(f.size());
+		vector<complex<double>> f0, f1;
+		for (size_t i = 0; i < n; i++)
+		{
+			if (i % 2 == 0)
+				f0.push_back(f[i]);
+			else
+				f1.push_back(f[i]);
+		}
+		vector<complex<double>> dft0 = inverse_dft(f0);
+		vector<complex<double>> dft1 = inverse_dft(f1);
+		complex<double> zeta(cos(-2. * M_PI / static_cast<double>(n)), sin(-2. * M_PI / static_cast<double>(n)));
+		complex<double> zeta_pow(1., 0.);
+		vector<complex<double>> ret(n);
+		for (size_t i = 0; i < n; i++)
+		{
+			ret[i] = f0[i % (n / 2)] + zeta_pow * f1[i % (n / 2)];
+			zeta_pow *= zeta;
+		}
+		return ret;
+	}
 
 public:
 	BigInt() : neg(false) { digit.push_back(0); }
@@ -76,7 +134,7 @@ public:
 			i /= 10;
 		}
 	}
-	bool getSign() const { return neg; }
+	bool getNeg() const { return neg; }
 	vector<int> getDigit() const { return digit; }
 	BigInt operator-() const
 	{
@@ -109,6 +167,31 @@ public:
 		return *this;
 	};
 	BigInt &operator-=(const BigInt &rhs) { return *this += -rhs; }
+	BigInt &operator*=(const BigInt &rhs)
+	{
+		const size_t n(ceil_pow(digit.size() + rhs.digit.size() - 2));
+		vector<complex<double>> a(n), b(n);
+		for (size_t i = 0; i < n; i++)
+		{
+			a[i] = i < digit.size() ? complex<double>(static_cast<double>(digit[i]), 0.) : 0;
+			b[i] = i < rhs.digit.size() ? complex<double>(static_cast<double>(rhs.digit[i]), 0.) : 0;
+		}
+		vector<complex<double>> dft_a(dft(a));
+		vector<complex<double>> dft_b(dft(b));
+		vector<complex<double>> accum(n);
+		for (size_t i = 0; i < n; i++)
+		{
+			accum[i] = dft_a[i] * dft_b[i];
+		}
+		vector<complex<double>> ret(inverse_dft(accum));
+		digit.resize(n, 0);
+		for (size_t i = 0; i < n; i++)
+		{
+			digit[i] = static_cast<int>(accum[i].real()) / n;
+		}
+		neg = neg ^ rhs.neg;
+		return *this;
+	}
 	friend istream &operator>>(istream &is, BigInt &bigint)
 	{
 		string s;
@@ -125,9 +208,9 @@ public:
 };
 bool operator<(const BigInt &lhs, const BigInt &rhs)
 {
-	if (lhs.getSign() != rhs.getSign()) return lhs.getSign();
+	if (lhs.getNeg() != rhs.getNeg()) return lhs.getNeg();
 	if (lhs.getDigit().size() != rhs.getDigit().size())
-		return lhs.getDigit().size() < rhs.getDigit().size() ^ lhs.getSign();
+		return lhs.getDigit().size() < rhs.getDigit().size() ^ lhs.getNeg();
 	size_t i(lhs.getDigit().size());
 	do
 	{
@@ -164,6 +247,9 @@ BigInt operator-(const BigInt &lhs, const BigInt &rhs)
 {
 	return BigInt(lhs) -= rhs;
 }
+BigInt operator*(const BigInt &lhs, const BigInt &rhs) {
+	return BigInt(lhs) *= rhs;
+}
 
 int main()
 {
@@ -182,11 +268,12 @@ int main()
 	assert(b(-70) == (b(30) -= b(100)));
 	assert(b(88) == b(48) + b(40));
 	assert(b(8) == b(48) - b(40));
-	assert(b("20000000000000000000000000000000000000000000000000000000000000000000") ==
-		   b("10000000000000000000000000000000000000000000000000000000000000000000") +
-			   b("10000000000000000000000000000000000000000000000000000000000000000000"));
+	assert(b("200000000000000000000000000") == b("100000000000000000000000000") + b("100000000000000000000000000"));
 	assert(b("-0") == b("0"));
 	assert(b(0) == b(-0));
+	cout << (b(100) *= b(100)) << endl;
+	// assert(b("100") * b("100") == b("10000"));
+	assert(b(-70) * b(8) == b(-560));
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
