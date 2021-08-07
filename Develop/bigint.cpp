@@ -27,7 +27,7 @@ class BigInt
 {
 private:
 	vector<int> digit;
-	bool sign;
+	bool neg;
 	void carry_and_fix()
 	{
 		size_t n(digit.size());
@@ -59,34 +59,53 @@ private:
 	}
 
 public:
-	BigInt() : sign(false) { digit.push_back(0); }
-	explicit BigInt(string &&s) : sign(s[0] == '-')
+	BigInt() : neg(false) { digit.push_back(0); }
+	explicit BigInt(string &&s) : neg(s[0] == '-')
 	{
-		for_each(s.crbegin(), s.crend() - sign, [&](const char &c) { digit.push_back(c - '0'); });
+		for_each(s.crbegin(), s.crend() - neg, [&](const char &c) { digit.push_back(c - '0'); });
 	}
-	explicit BigInt(i64 &&i) : sign(i < 0)
+	explicit BigInt(i64 &&i) : neg(i < 0)
 	{
-		if (sign) i = -i;
+		if (neg) i = -i;
 		while (i > 0)
 		{
 			digit.push_back(i % 10);
 			i /= 10;
 		}
 	}
-	bool getSign() const { return sign; }
+	bool getSign() const { return neg; }
 	vector<int> getDigit() const { return digit; }
+	BigInt operator-() const
+	{
+		BigInt b(*this);
+		b.neg = !b.neg;
+		return b;
+	}
+	BigInt operator+() const
+	{
+		BigInt b(*this);
+		return b;
+	}
 	BigInt &operator+=(const BigInt &rhs)
 	{
 		size_t n(max(digit.size(), rhs.digit.size()));
+		bool diff(neg ^ rhs.neg);
 		for (size_t i = 0; i < n; i++)
 		{
-			if (i >= digit.size()) { digit.push_back(rhs.digit[i]); }
+			if (i >= digit.size()) { digit.push_back(diff ? -rhs.digit[i] : rhs.digit[i]); }
 			else
-				digit[i] += i < rhs.digit.size() ? rhs.digit[i] : 0;
+				digit[i] += i < rhs.digit.size() ? diff ? -rhs.digit[i] : rhs.digit[i] : 0;
 		}
 		carry_and_fix();
+		if (digit.back() < 0)
+		{
+			for_each(digit.begin(), digit.end(), [](int &i) { i = -i; });
+			neg = !neg;
+			carry_and_fix();
+		}
 		return *this;
 	};
+	BigInt &operator-=(const BigInt &rhs) { return *this += -rhs; }
 	friend istream &operator>>(istream &is, BigInt &bigint)
 	{
 		string s;
@@ -96,12 +115,11 @@ public:
 	}
 	friend ostream &operator<<(ostream &os, const BigInt &bigint)
 	{
-		if (bigint.sign) os << '-';
-		for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const int &i) { os << i; });
+		if (bigint.neg) os << '-';
+		for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const int &i) { os << i << " "; });
 		return os;
 	}
 };
-
 bool operator<(const BigInt &lhs, const BigInt &rhs)
 {
 	if (lhs.getSign() != rhs.getSign()) return lhs.getSign();
@@ -127,6 +145,14 @@ bool operator>=(const BigInt &lhs, const BigInt &rhs)
 {
 	return !(lhs < rhs);
 }
+bool operator==(const BigInt &lhs, const BigInt &rhs)
+{
+	return !(lhs < rhs || lhs > rhs);
+}
+bool operator!=(const BigInt &lhs, const BigInt &rhs)
+{
+	return !(rhs == lhs);
+}
 
 int main()
 {
@@ -137,7 +163,12 @@ int main()
 	assert(b("122") >= b("122"));
 	assert(b("122") <= b("122"));
 	assert(b("122") <= b("123"));
-	cout << (b(56) += b(4546)) << endl;
+	assert(b("-25") == -b("25"));
+	assert(b("232") == (b(200) += b(32)));
+	assert(b(-23) == (b(-20) += b(-3)));
+	assert(b(-10) == (b(20) += b(-30)));
+	assert(b(190) == (b(-10) += b(200)));
+	assert(b(-70) == (b(30) -= b(100)));
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
