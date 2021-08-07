@@ -116,7 +116,7 @@ public:
 	friend ostream &operator<<(ostream &os, const BigInt &bigint)
 	{
 		if (bigint.neg) os << '-';
-		for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const int &i) { os << i << " "; });
+		for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const int &i) { os << i; });
 		return os;
 	}
 };
@@ -153,6 +153,14 @@ bool operator!=(const BigInt &lhs, const BigInt &rhs)
 {
 	return !(rhs == lhs);
 }
+BigInt operator+(const BigInt &lhs, const BigInt &rhs)
+{
+	return BigInt(lhs) += rhs;
+}
+BigInt operator-(const BigInt &lhs, const BigInt &rhs)
+{
+	return BigInt(lhs) -= rhs;
+}
 
 int main()
 {
@@ -169,6 +177,8 @@ int main()
 	assert(b(-10) == (b(20) += b(-30)));
 	assert(b(190) == (b(-10) += b(200)));
 	assert(b(-70) == (b(30) -= b(100)));
+	assert(b(88) == b(48) + b(40));
+	assert(b(8) == b(48) - b(40));
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
