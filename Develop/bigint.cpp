@@ -28,6 +28,11 @@ template <class T = int> class BigInt
 private:
 	vector<T> digit;
 	bool neg;
+	enum FFT
+	{
+		NORMAL,
+		INVERSE,
+	};
 	void carry_and_fix()
 	{
 		const size_t n(digit.size());
@@ -35,20 +40,20 @@ private:
 		{
 			if (digit[i] >= 10)
 			{
-				T k = digit[i] / 10;
+				const T k = digit[i] / 10;
 				digit[i] -= k * 10;
 				digit[i + 1] += k;
 			}
 			if (digit[i] < 0)
 			{
-				T k = (-digit[i] - 1) / 10 + 1;
+				const T k = (-digit[i] - 1) / 10 + 1;
 				digit[i] += k * 10;
 				digit[i + 1] -= k;
 			}
 		}
 		while (digit.back() >= 10)
 		{
-			T k = digit.back() / 10;
+			const T k = digit.back() / 10;
 			digit.back() -= k * 10;
 			digit.push_back(k);
 		}
@@ -67,7 +72,7 @@ private:
 		}
 		return n;
 	}
-	vector<complex<double>> dft(const vector<complex<double>> &f)
+	vector<complex<double>> dft(const vector<complex<double>> &f, FFT TYPE)
 	{
 		if (f.size() == 1) return f;
 		const size_t n(f.size());
@@ -80,33 +85,11 @@ private:
 			else
 				f1.push_back(f[i]);
 		}
-		const vector<complex<double>> dft0 = dft(f0);
-		const vector<complex<double>> dft1 = dft(f1);
-		const complex<double> zeta(cos(2. * M_PI / static_cast<double>(n)), sin(2. * M_PI / static_cast<double>(n)));
-		complex<double> zeta_pow(1., 0.);
-		vector<complex<double>> ret(n);
-		for (size_t i = 0; i < n; i++)
-		{
-			ret[i] = dft0[i % (n / 2)] + zeta_pow * dft1[i % (n / 2)];
-			zeta_pow *= zeta;
-		}
-		return ret;
-	}
-	vector<complex<double>> inverse_dft(const vector<complex<double>> &f)
-	{
-		if (f.size() == 1) return f;
-		size_t n(f.size());
-		vector<complex<double>> f0, f1;
-		for (size_t i = 0; i < n; i++)
-		{
-			if (i % 2 == 0)
-				f0.push_back(f[i]);
-			else
-				f1.push_back(f[i]);
-		}
-		const vector<complex<double>> dft0 = inverse_dft(f0);
-		const vector<complex<double>> dft1 = inverse_dft(f1);
-		const complex<double> zeta(cos(-2. * M_PI / static_cast<double>(n)), sin(-2. * M_PI / static_cast<double>(n)));
+		const vector<complex<double>> dft0 = dft(f0, TYPE);
+		const vector<complex<double>> dft1 = dft(f1, TYPE);
+		const double re(cos(2. * M_PI / static_cast<double>(n)));
+		const double im(sin(2. * M_PI / static_cast<double>(n)) * (TYPE == FFT::NORMAL ? 1. : -1.));
+		const complex<double> zeta(re, im);
 		complex<double> zeta_pow(1., 0.);
 		vector<complex<double>> ret(n);
 		for (size_t i = 0; i < n; i++)
@@ -176,14 +159,14 @@ public:
 			a[i] = complex<double>(static_cast<double>(i < digit.size() ? digit[i] : 0.), 0.);
 			b[i] = complex<double>(static_cast<double>(i < rhs.digit.size() ? rhs.digit[i] : 0.), 0.);
 		}
-		const vector<complex<double>> dft_a(dft(a));
-		const vector<complex<double>> dft_b(dft(b));
+		const vector<complex<double>> dft_a(dft(a, FFT::NORMAL));
+		const vector<complex<double>> dft_b(dft(b, FFT::NORMAL));
 		vector<complex<double>> accum(n);
 		for (size_t i = 0; i < n; i++)
 		{
 			accum[i] = dft_a[i] * dft_b[i];
 		}
-		const vector<complex<double>> ret(inverse_dft(accum));
+		const vector<complex<double>> ret(dft(accum, FFT::INVERSE));
 		digit.resize(n, 0);
 		for (size_t i = 0; i < n; i++)
 		{
@@ -212,13 +195,16 @@ public:
 template <class T> bool operator<(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
 	if (lhs.getNeg() != rhs.getNeg()) return lhs.getNeg();
-	if (lhs.getDigit().size() != rhs.getDigit().size())
-		return lhs.getDigit().size() < rhs.getDigit().size() ^ lhs.getNeg();
-	size_t i(lhs.getDigit().size());
+	const vector<T> &lhs_digit = lhs.getDigit();
+	const vector<T> &rhs_digit = rhs.getDigit();
+	const size_t lhs_n = lhs_digit.size();
+	const size_t rhs_n = rhs_digit.size();
+	if (lhs_n != rhs_n) return (lhs_n < rhs_n) ^ lhs.getNeg();
+	size_t i(lhs_n);
 	do
 	{
 		i--;
-		if (lhs.getDigit()[i] < rhs.getDigit()[i]) return true;
+		if (lhs_digit[i] < rhs_digit[i]) return true;
 	} while (i != 0);
 	return false;
 }
