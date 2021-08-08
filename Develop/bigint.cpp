@@ -23,7 +23,7 @@ inline i64 gcd(i64, i64);
 template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
 
-template <class T=int> class BigInt
+template <class T = int> class BigInt
 {
 private:
 	vector<T> digit;
@@ -61,7 +61,7 @@ private:
 	size_t ceil_pow(const size_t i)
 	{
 		size_t n = 1;
-		while (i >= n)
+		while (i > n)
 		{
 			n <<= 1;
 		}
@@ -80,9 +80,9 @@ private:
 			else
 				f1.push_back(f[i]);
 		}
-		vector<complex<double>> dft0 = dft(f0);
-		vector<complex<double>> dft1 = dft(f1);
-		complex<double> zeta(cos(2. * M_PI / static_cast<double>(n)), sin(2. * M_PI / static_cast<double>(n)));
+		const vector<complex<double>> dft0 = dft(f0);
+		const vector<complex<double>> dft1 = dft(f1);
+		const complex<double> zeta(cos(2. * M_PI / static_cast<double>(n)), sin(2. * M_PI / static_cast<double>(n)));
 		complex<double> zeta_pow(1., 0.);
 		vector<complex<double>> ret(n);
 		for (size_t i = 0; i < n; i++)
@@ -104,9 +104,9 @@ private:
 			else
 				f1.push_back(f[i]);
 		}
-		vector<complex<double>> dft0 = inverse_dft(f0);
-		vector<complex<double>> dft1 = inverse_dft(f1);
-		complex<double> zeta(cos(-2. * M_PI / static_cast<double>(n)), sin(-2. * M_PI / static_cast<double>(n)));
+		const vector<complex<double>> dft0 = inverse_dft(f0);
+		const vector<complex<double>> dft1 = inverse_dft(f1);
+		const complex<double> zeta(cos(-2. * M_PI / static_cast<double>(n)), sin(-2. * M_PI / static_cast<double>(n)));
 		complex<double> zeta_pow(1., 0.);
 		vector<complex<double>> ret(n);
 		for (size_t i = 0; i < n; i++)
@@ -169,7 +169,7 @@ public:
 	BigInt &operator-=(const BigInt &rhs) { return *this += -rhs; }
 	BigInt &operator*=(const BigInt &rhs)
 	{
-		const size_t n(ceil_pow(digit.size() + rhs.digit.size() - 2));
+		const size_t n(ceil_pow(digit.size() + rhs.digit.size() - 1));
 		vector<complex<double>> a(n), b(n);
 		for (size_t i = 0; i < n; i++)
 		{
@@ -193,6 +193,8 @@ public:
 		carry_and_fix();
 		return *this;
 	}
+	BigInt &operator/(const BigInt &rhs) { return *this; }
+	BigInt &operator%(const BigInt &rhs) { return *this; }
 	friend istream &operator>>(istream &is, BigInt &bigint)
 	{
 		string s;
@@ -251,6 +253,14 @@ template <class T> BigInt<T> operator-(const BigInt<T> &lhs, const BigInt<T> &rh
 template <class T> BigInt<T> operator*(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
 	return BigInt<T>(lhs) *= rhs;
+}
+template <class T> BigInt<T> operator/(const BigInt<T> &lhs, const BigInt<T> &rhs)
+{
+	return BigInt<T>(lhs) /= rhs;
+}
+template <class T> BigInt<T> operator%(const BigInt<T> &lhs, const BigInt<T> &rhs)
+{
+	return BigInt<T>(lhs) %= rhs;
 }
 
 int main()
