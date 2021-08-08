@@ -23,10 +23,10 @@ inline i64 gcd(i64, i64);
 template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
 
-class BigInt
+template <class T=int> class BigInt
 {
 private:
-	vector<int> digit;
+	vector<T> digit;
 	bool neg;
 	void carry_and_fix()
 	{
@@ -35,20 +35,20 @@ private:
 		{
 			if (digit[i] >= 10)
 			{
-				int k = digit[i] / 10;
+				T k = digit[i] / 10;
 				digit[i] -= k * 10;
 				digit[i + 1] += k;
 			}
 			if (digit[i] < 0)
 			{
-				int k = (-digit[i] - 1) / 10 + 1;
+				T k = (-digit[i] - 1) / 10 + 1;
 				digit[i] += k * 10;
 				digit[i + 1] -= k;
 			}
 		}
 		while (digit.back() >= 10)
 		{
-			int k = digit.back() / 10;
+			T k = digit.back() / 10;
 			digit.back() -= k * 10;
 			digit.push_back(k);
 		}
@@ -61,7 +61,7 @@ private:
 	size_t ceil_pow(const size_t i)
 	{
 		size_t n = 1;
-		while (i > n)
+		while (i >= n)
 		{
 			n <<= 1;
 		}
@@ -87,7 +87,7 @@ private:
 		vector<complex<double>> ret(n);
 		for (size_t i = 0; i < n; i++)
 		{
-			ret[i] = f0[i % (n / 2)] + zeta_pow * f1[i % (n / 2)];
+			ret[i] = dft0[i % (n / 2)] + zeta_pow * dft1[i % (n / 2)];
 			zeta_pow *= zeta;
 		}
 		return ret;
@@ -111,7 +111,7 @@ private:
 		vector<complex<double>> ret(n);
 		for (size_t i = 0; i < n; i++)
 		{
-			ret[i] = f0[i % (n / 2)] + zeta_pow * f1[i % (n / 2)];
+			ret[i] = dft0[i % (n / 2)] + zeta_pow * dft1[i % (n / 2)];
 			zeta_pow *= zeta;
 		}
 		return ret;
@@ -135,7 +135,7 @@ public:
 		}
 	}
 	bool getNeg() const { return neg; }
-	vector<int> getDigit() const { return digit; }
+	vector<T> getDigit() const { return digit; }
 	BigInt operator-() const
 	{
 		BigInt b(*this);
@@ -173,23 +173,24 @@ public:
 		vector<complex<double>> a(n), b(n);
 		for (size_t i = 0; i < n; i++)
 		{
-			a[i] = i < digit.size() ? complex<double>(static_cast<double>(digit[i]), 0.) : 0;
-			b[i] = i < rhs.digit.size() ? complex<double>(static_cast<double>(rhs.digit[i]), 0.) : 0;
+			a[i] = complex<double>(static_cast<double>(i < digit.size() ? digit[i] : 0.), 0.);
+			b[i] = complex<double>(static_cast<double>(i < rhs.digit.size() ? rhs.digit[i] : 0.), 0.);
 		}
-		vector<complex<double>> dft_a(dft(a));
-		vector<complex<double>> dft_b(dft(b));
+		const vector<complex<double>> dft_a(dft(a));
+		const vector<complex<double>> dft_b(dft(b));
 		vector<complex<double>> accum(n);
 		for (size_t i = 0; i < n; i++)
 		{
 			accum[i] = dft_a[i] * dft_b[i];
 		}
-		vector<complex<double>> ret(inverse_dft(accum));
+		const vector<complex<double>> ret(inverse_dft(accum));
 		digit.resize(n, 0);
 		for (size_t i = 0; i < n; i++)
 		{
-			digit[i] = static_cast<int>(accum[i].real()) / n;
+			digit[i] = static_cast<T>(round(ret[i].real())) / n;
 		}
-		neg = neg ^ rhs.neg;
+		neg ^= rhs.neg;
+		carry_and_fix();
 		return *this;
 	}
 	friend istream &operator>>(istream &is, BigInt &bigint)
@@ -202,11 +203,11 @@ public:
 	friend ostream &operator<<(ostream &os, const BigInt &bigint)
 	{
 		if (bigint.neg) os << '-';
-		for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const int &i) { os << i; });
+		for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const T &i) { os << i; });
 		return os;
 	}
 };
-bool operator<(const BigInt &lhs, const BigInt &rhs)
+template <class T> bool operator<(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
 	if (lhs.getNeg() != rhs.getNeg()) return lhs.getNeg();
 	if (lhs.getDigit().size() != rhs.getDigit().size())
@@ -219,41 +220,42 @@ bool operator<(const BigInt &lhs, const BigInt &rhs)
 	} while (i != 0);
 	return false;
 }
-bool operator>(const BigInt &lhs, const BigInt &rhs)
+template <class T> bool operator>(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
 	return rhs < lhs;
 }
-bool operator<=(const BigInt &lhs, const BigInt &rhs)
+template <class T> bool operator<=(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
 	return !(lhs > rhs);
 }
-bool operator>=(const BigInt &lhs, const BigInt &rhs)
+template <class T> bool operator>=(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
 	return !(lhs < rhs);
 }
-bool operator==(const BigInt &lhs, const BigInt &rhs)
+template <class T> bool operator==(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
 	return !(lhs < rhs || lhs > rhs);
 }
-bool operator!=(const BigInt &lhs, const BigInt &rhs)
+template <class T> bool operator!=(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
 	return !(rhs == lhs);
 }
-BigInt operator+(const BigInt &lhs, const BigInt &rhs)
+template <class T> BigInt<T> operator+(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
-	return BigInt(lhs) += rhs;
+	return BigInt<T>(lhs) += rhs;
 }
-BigInt operator-(const BigInt &lhs, const BigInt &rhs)
+template <class T> BigInt<T> operator-(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
-	return BigInt(lhs) -= rhs;
+	return BigInt<T>(lhs) -= rhs;
 }
-BigInt operator*(const BigInt &lhs, const BigInt &rhs) {
-	return BigInt(lhs) *= rhs;
+template <class T> BigInt<T> operator*(const BigInt<T> &lhs, const BigInt<T> &rhs)
+{
+	return BigInt<T>(lhs) *= rhs;
 }
 
 int main()
 {
-	using b = BigInt;
+	using b = BigInt<>;
 	assert(b("4564") < b("45465"));
 	assert(b("4546") > b("45"));
 	assert(b("122") >= b("121"));
@@ -271,9 +273,9 @@ int main()
 	assert(b("200000000000000000000000000") == b("100000000000000000000000000") + b("100000000000000000000000000"));
 	assert(b("-0") == b("0"));
 	assert(b(0) == b(-0));
-	cout << (b(100) *= b(100)) << endl;
-	// assert(b("100") * b("100") == b("10000"));
-	assert(b(-70) * b(8) == b(-560));
+	assert(b(101) * b(-23) == b(-101 * 23));
+	assert(b(-1021) * b(3198) == b(-1021 * 3198));
+	assert(b(20) * b(20) == b(400));
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
