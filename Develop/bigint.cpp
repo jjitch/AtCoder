@@ -243,7 +243,11 @@ public:
 		if (digit.size() == 1 && digit[0] == 0) neg = false;
 		return *this;
 	}
-	BigInt &operator%=(const BigInt &rhs) { return *this; }
+	BigInt &operator%=(const BigInt &rhs)
+	{
+		*this = move(*this - *this / rhs * rhs);
+		return *this;
+	}
 	friend istream &operator>>(istream &is, BigInt &bigint)
 	{
 		string s;
@@ -358,6 +362,16 @@ int main()
 	assert(b("8325465154685413215465465154231546876854132656544132135684543121325674413213213154656") /
 			   b("4545421546568413534541321345") ==
 		   b("1831615631111433575420527610370121692069410934870793669338"));
+	assert(b(537891253006) % b(406355) == b(358571));
+	assert(b(95971699922) % b(9438052) == b(5587186));
+	assert(b(641325680486) % b(30919259) == b(29329567));
+	assert(b(112274294521) % b(2633654) == b(1624501));
+	assert(b(591834298908) % b(47251195) == b(13081533));
+	assert(b(822370066918) % b(63394160) == b(21023398));
+	assert(b(447454199825) % b(33265597) == b(31920175));
+	assert(b(655395348763) % b(40017336) == b(31437091));
+	assert(b(611085654973) % b(29377082) == b(12972291));
+	assert(b(203928983064) % b(14485770) == b(12798774));
 	cout << "assertion is all clear!" << endl;
 }
 
