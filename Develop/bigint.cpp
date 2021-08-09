@@ -99,6 +99,27 @@ private:
 		}
 		return ret;
 	}
+	BigInt &cut_decade(size_t n)
+	{
+		if (n >= digit.size())
+		{
+			digit[0] = 0;
+			while (digit.size() > 1)
+			{
+				digit.pop_back();
+			}
+			return *this;
+		}
+		for (size_t i = 0; i < digit.size() - n; i++)
+		{
+			digit[i] = digit[i + n];
+		}
+		for (size_t i = 0; i < n; i++)
+		{
+			digit.pop_back();
+		}
+		return *this;
+	}
 
 public:
 	BigInt() : neg(false) { digit.push_back(0); }
@@ -176,8 +197,49 @@ public:
 		carry_and_fix();
 		return *this;
 	}
-	BigInt &operator/(const BigInt &rhs) { return *this; }
-	BigInt &operator%(const BigInt &rhs) { return *this; }
+	BigInt &operator/=(const BigInt &rhs)
+	{
+		if (abs(*this) < abs(rhs))
+		{
+			*this = BigInt(0);
+			return *this;
+		}
+		const bool origin_neg(neg);
+		if (abs(*this) == abs(rhs))
+		{
+			*this = BigInt(1);
+			neg = origin_neg ^ rhs.neg;
+			return *this;
+		}
+		if (neg) { neg = !neg; }
+		size_t num_d(digit.size());
+		size_t den_d(rhs.digit.size());
+
+		string init = "1";
+		for (size_t i = 0; i < num_d - den_d; i++)
+		{
+			init += "0";
+		}
+		BigInt prev(move(init));
+		BigInt two(2);
+		while (true)
+		{
+			BigInt f(move((rhs.neg ? -rhs : rhs) * prev * prev));
+			f.cut_decade(num_d);
+			BigInt next = move(two * prev - f);
+			if (next == prev) break;
+			prev = move(next);
+		}
+		BigInt origin(*this);
+		*this *= prev;
+		this->cut_decade(num_d);
+		if (*this * (rhs.neg ? -rhs : rhs) > origin) *this -= BigInt(1);
+		if (origin_neg) neg = !neg;
+		if (rhs.neg) neg = !neg;
+		if (digit.size() == 1 && digit[0] == 0) neg = false;
+		return *this;
+	}
+	BigInt &operator%=(const BigInt &rhs) { return *this; }
 	friend istream &operator>>(istream &is, BigInt &bigint)
 	{
 		string s;
@@ -200,13 +262,7 @@ template <class T> bool operator<(const BigInt<T> &lhs, const BigInt<T> &rhs)
 	const size_t lhs_n = lhs_digit.size();
 	const size_t rhs_n = rhs_digit.size();
 	if (lhs_n != rhs_n) return (lhs_n < rhs_n) ^ lhs.getNeg();
-	size_t i(lhs_n);
-	do
-	{
-		i--;
-		if (lhs_digit[i] < rhs_digit[i]) return true;
-	} while (i != 0);
-	return false;
+	return lexicographical_compare(lhs_digit.crbegin(), lhs_digit.crend(), rhs_digit.crbegin(), rhs_digit.crend());
 }
 template <class T> bool operator>(const BigInt<T> &lhs, const BigInt<T> &rhs)
 {
@@ -248,10 +304,16 @@ template <class T> BigInt<T> operator%(const BigInt<T> &lhs, const BigInt<T> &rh
 {
 	return BigInt<T>(lhs) %= rhs;
 }
+template <class T> BigInt<T> abs(const BigInt<T> &x)
+{
+	return x.getNeg() ? -x : x;
+}
 
 int main()
 {
 	using b = BigInt<>;
+	assert(b(-99) < b(78));
+	assert(b(123) < b(321));
 	assert(b("4564") < b("45465"));
 	assert(b("4546") > b("45"));
 	assert(b("122") >= b("121"));
@@ -272,6 +334,34 @@ int main()
 	assert(b(101) * b(-23) == b(-101 * 23));
 	assert(b(-1021) * b(3198) == b(-1021 * 3198));
 	assert(b(20) * b(20) == b(400));
+	assert(b(576556489728) / b(13752172) == b(41924));
+	assert(b(972290618421) / b(68921105) == b(14107));
+	assert(b(245177114802) / b(4584054) == b(53484));
+	assert(b(553221833535) / b(32791261) == b(16871));
+	assert(b(170959299394) / b(3409750) == b(50138));
+	assert(b(418727655820) / b(20701453) == b(20226));
+	assert(b(414673749104) / b(27620304) == b(15013));
+	assert(b(383152136535) / b(2443200) == b(156823));
+	assert(b(487711634957) / b(4752361) == b(102625));
+	assert(b(-39676640719) / b(1330846) == b(-29813));
+	assert(b(0) / b(2) == b(0));
+	assert(b(0) / b(-2) == b(0));
+	assert(b(-10) / b(3) == b(-3));
+	assert(b(-1) / b(3) == b(0));
+	assert(b(12) / b(-3) == b(-4));
+	assert(b(14) / b(-3) == b(-4));
+	assert(b(23) / b(22) == b(1));
+	assert(b(23) / b(28) == b(0));
+	assert(abs(b(-999)) == b(999));
+	assert(b(5) / b(8) == b(0));
+	assert(b(8) / b(7) == b(1));
+	assert(b(8) / b(8) == b(1));
+	assert(b(8) / b(7) == b(1));
+	assert(b(8) / b(-7) == b(-1));
+	assert(b(-8) / b(8) == b(-1));
+	assert(b(8) / b(-8) == b(-1));
+	assert(b(4) / b(2) == b(2));
+	cout << "assertion is all clear!" << endl;
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
