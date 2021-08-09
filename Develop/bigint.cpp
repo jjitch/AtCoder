@@ -216,23 +216,27 @@ public:
 		size_t den_d(rhs.digit.size());
 
 		string init = "1";
-		for (size_t i = 0; i < num_d - den_d; i++)
+		for (size_t i = 0; i < num_d - den_d + 2; i++)
 		{
 			init += "0";
 		}
 		BigInt prev(move(init));
 		BigInt two(2);
+		size_t cnt(0);
 		while (true)
 		{
 			BigInt f(move((rhs.neg ? -rhs : rhs) * prev * prev));
-			f.cut_decade(num_d);
+			f.cut_decade(num_d + 2);
 			BigInt next = move(two * prev - f);
+
 			if (next == prev) break;
+			cnt++;
+			if (cnt == 1000) cout << next << " " << prev << " " << rhs << endl;
 			prev = move(next);
 		}
 		BigInt origin(*this);
 		*this *= prev;
-		this->cut_decade(num_d);
+		this->cut_decade(num_d + 2);
 		if (*this * (rhs.neg ? -rhs : rhs) > origin) *this -= BigInt(1);
 		if (origin_neg) neg = !neg;
 		if (rhs.neg) neg = !neg;
@@ -312,27 +316,7 @@ template <class T> BigInt<T> abs(const BigInt<T> &x)
 int main()
 {
 	using b = BigInt<>;
-	assert(b(-99) < b(78));
-	assert(b(123) < b(321));
-	assert(b("4564") < b("45465"));
-	assert(b("4546") > b("45"));
-	assert(b("122") >= b("121"));
-	assert(b("122") >= b("122"));
-	assert(b("122") <= b("122"));
-	assert(b("122") <= b("123"));
-	assert(b("-25") == -b("25"));
-	assert(b("232") == (b(200) += b(32)));
-	assert(b(-23) == (b(-20) += b(-3)));
-	assert(b(-10) == (b(20) += b(-30)));
-	assert(b(190) == (b(-10) += b(200)));
-	assert(b(-70) == (b(30) -= b(100)));
-	assert(b(88) == b(48) + b(40));
-	assert(b(8) == b(48) - b(40));
-	assert(b("200000000000000000000000000") == b("100000000000000000000000000") + b("100000000000000000000000000"));
-	assert(b("-0") == b("0"));
-	assert(b(0) == b(-0));
-	assert(b(101) * b(-23) == b(-101 * 23));
-	assert(b(-1021) * b(3198) == b(-1021 * 3198));
+	assert(b(121) / b(11) == b(11));
 	assert(b(20) * b(20) == b(400));
 	assert(b(576556489728) / b(13752172) == b(41924));
 	assert(b(972290618421) / b(68921105) == b(14107));
@@ -360,7 +344,20 @@ int main()
 	assert(b(8) / b(-7) == b(-1));
 	assert(b(-8) / b(8) == b(-1));
 	assert(b(8) / b(-8) == b(-1));
-	assert(b(4) / b(2) == b(2));
+	assert(b(4) / b(-3) == b(-1));
+	assert(b(123454121) / b(-1) == b(-123454121));
+	assert(b(123454121) / b(123454120) == b(1));
+	assert(b(-123454121) / b(-123454120) == b(1));
+	assert(b(123454121) / b(-123454120) == b(-1));
+	assert(b(-123454121) / b(123454120) == b(-1));
+	assert(b(9) / b(4) == b(2));
+	assert(b(9) / b(7) == b(1));
+	assert(b(10000) / b(9999) == b(1));
+	assert(b(9999) / b(9998) == b(1));
+	assert(b(9999) / b(4998) == b(2));
+	assert(b("8325465154685413215465465154231546876854132656544132135684543121325674413213213154656") /
+			   b("4545421546568413534541321345") ==
+		   b("1831615631111433575420527610370121692069410934870793669338"));
 	cout << "assertion is all clear!" << endl;
 }
 
