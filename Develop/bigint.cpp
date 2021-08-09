@@ -371,6 +371,13 @@ int main()
 				 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
 				 "999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999") ==
 		   b("1"));
+	string max_a_str = "2";
+	REP(i, 10000) max_a_str += "0000000000";
+	string max_b_str = "2";
+	REP(i, 10000) max_b_str += "0000000000";
+	string max_ans_str = "4";
+	REP(i, 20000) max_ans_str += "0000000000";
+	assert(b(move(max_a_str)) * b(move(max_b_str)) == b(move(max_ans_str)));
 	cout << "assertion is all clear!" << endl;
 }
 
