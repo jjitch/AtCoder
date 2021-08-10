@@ -193,25 +193,22 @@ public:
 			return *this;
 		}
 		if (neg) { neg = !neg; }
-		size_t num_d(digit.size());
-		size_t den_d(rhs.digit.size());
+		const size_t num_d(digit.size());
+		const size_t den_d(rhs.digit.size());
 		string init = "1";
 		for (size_t i = 0; i < num_d; i++)
 			init += "0";
 		BigInt prev(move(init));
-		BigInt two(2);
-		size_t cnt(0);
+		const BigInt two(2);
 		while (true)
 		{
 			BigInt f(move((rhs.neg ? -rhs : rhs) * prev * prev));
 			f.cut_decade(num_d + den_d);
 			BigInt next = move(two * prev - f);
 			if (next == prev) break;
-			cnt++;
-			if (cnt == 1000) cout << next << " " << prev << " " << rhs << endl;
 			prev = move(next);
 		}
-		BigInt origin(*this);
+		const BigInt origin(*this);
 		*this *= prev;
 		this->cut_decade(num_d + den_d);
 		if (*this * (rhs.neg ? -rhs : rhs) > origin) *this -= BigInt(1);
