@@ -218,7 +218,7 @@ namespace
 			for (size_t i = 0; i < n; i++)
 				digit[i] = ret[i] / n;
 			neg ^= rhs.neg;
-			carry_and_fix();
+			// carry_and_fix();
 			return *this;
 		}
 		BigInt &operator/=(const BigInt &rhs)
@@ -275,7 +275,7 @@ namespace
 		friend ostream &operator<<(ostream &os, const BigInt &bigint)
 		{
 			if (bigint.neg) os << '-';
-			for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const T &i) { os << i; });
+			for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const T &i) { os << i << "\n"; });
 			return os;
 		}
 	};
@@ -347,19 +347,20 @@ int main()
 	// 			 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
 	// 			 "999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999") ==
 	// 	   b("1"));
-	i64 times = 204;
+	i64 times = 409;
 	string max_a_str = "1";
 	REP(i, times) max_a_str += "0000000000";
 	string max_b_str = "2";
 	REP(i, times) max_b_str += "0000000000";
 	string max_ans_str = "1";
 	REP(i, 2 * times) max_ans_str += "0000000000";
-	// assert(b(move(max_a_str)) * b(move(max_b_str)) == b(move(max_ans_str)));
-	// b max_nines(max_a_str)
-	cout << (b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) << endl;
-	cout << "----" << endl;
-	cout << (b(max_ans_str) - b(max_b_str) + b(1)) << endl;
-	assert((b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) == (b(max_ans_str) - b(max_b_str) + b(1)));
+	// cout << (b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) << endl;
+	// cout << "----" << endl;
+	ofstream outfile("test.txt");
+	outfile << (b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) << endl;
+	outfile.close();
+	// cout << (b(max_ans_str) - b(max_b_str) + b(1)) << endl;
+	// assert((b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) == (b(max_ans_str) - b(max_b_str) + b(1)));
 	cout << "assertion is all clear!" << endl;
 }
 
