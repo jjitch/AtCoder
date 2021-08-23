@@ -19,362 +19,347 @@ using vvi = vector<vi>;
 constexpr i64 INF64 = 1LL << 60LL;
 constexpr i64 MOD = 1000000007;
 inline i64 modpow(i64, i64, i64 = INF64);
+inline i64 modinv(i64, i64);
 inline i64 gcd(i64, i64);
 template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
 
-template <class T = int> class BigInt
+namespace
 {
-private:
-	vector<T> digit;
-	bool neg;
-	enum FFT
+	template <class T = i64> class BigInt
 	{
-		NORMAL,
-		INVERSE,
-	};
-	void carry_and_fix()
-	{
-		const size_t n(digit.size());
-		REP(i, n - 1)
+	private:
+		i64 NTT_MOD;
+		i64 NTT_ROOT;
+		vector<i64> NTT_ROOTS;
+		vector<i64> NTT_INV_ROOTS;
+		vector<T> digit;
+		bool neg;
+		enum FFT
 		{
-			if (digit[i] >= 10)
+			NORMAL,
+			INVERSE,
+		};
+		void carry_and_fix()
+		{
+			const size_t n(digit.size());
+			REP(i, n - 1)
 			{
-				const T k = digit[i] / 10;
-				digit[i] -= k * 10;
-				digit[i + 1] += k;
+				if (digit[i] >= 10)
+				{
+					const T k = digit[i] / 10;
+					digit[i] -= k * 10;
+					digit[i + 1] += k;
+				}
+				if (digit[i] < 0)
+				{
+					const T k = (-digit[i] - 1) / 10 + 1;
+					digit[i] += k * 10;
+					digit[i + 1] -= k;
+				}
 			}
-			if (digit[i] < 0)
+			while (digit.back() >= 10)
 			{
-				const T k = (-digit[i] - 1) / 10 + 1;
-				digit[i] += k * 10;
-				digit[i + 1] -= k;
+				const T k = digit.back() / 10;
+				digit.back() -= k * 10;
+				digit.push_back(k);
 			}
+			while (digit.size() >= 2 && digit.back() == 0)
+				digit.pop_back();
+			if (digit.size() == 1 && digit[0] == 0) neg = false;
 		}
-		while (digit.back() >= 10)
+		size_t ceil_pow(const size_t i)
 		{
-			const T k = digit.back() / 10;
-			digit.back() -= k * 10;
-			digit.push_back(k);
+			size_t n = 1;
+			while (i > n)
+				n <<= 1;
+			return n;
 		}
-		while (digit.size() >= 2 && digit.back() == 0)
-			digit.pop_back();
-		if (digit.size() == 1 && digit[0] == 0) neg = false;
-	}
-	size_t ceil_pow(const size_t i)
-	{
-		size_t n = 1;
-		while (i > n)
-			n <<= 1;
-		return n;
-	}
-	vector<complex<double>> dft(const vector<complex<double>> &f, FFT TYPE)
-	{
-		if (f.size() == 1) return f;
-		const size_t n(f.size());
-		vector<complex<double>> f0;
-		vector<complex<double>> f1;
-		for (size_t i = 0; i < n; i++)
-			i % 2 == 0 ? f0.push_back(f[i]) : f1.push_back(f[i]);
-		const vector<complex<double>> dft0 = dft(f0, TYPE);
-		const vector<complex<double>> dft1 = dft(f1, TYPE);
-		const double re(cos(2. * M_PI / static_cast<double>(n)));
-		const double im(sin(2. * M_PI / static_cast<double>(n)) * (TYPE == FFT::NORMAL ? 1. : -1.));
-		const complex<double> zeta(re, im);
-		complex<double> zeta_pow(1., 0.);
-		vector<complex<double>> ret(n);
-		for (size_t i = 0; i < n; i++)
+		BigInt &cut_decade(size_t n)
 		{
-			ret[i] = dft0[i % (n / 2)] + zeta_pow * dft1[i % (n / 2)];
-			zeta_pow *= zeta;
-		}
-		return ret;
-	}
-	BigInt &cut_decade(size_t n)
-	{
-		if (n >= digit.size())
-		{
-			digit[0] = 0;
-			while (digit.size() > 1)
+			if (n >= digit.size())
+			{
+				digit[0] = 0;
+				while (digit.size() > 1)
+					digit.pop_back();
+				return *this;
+			}
+			for (size_t i = 0; i < digit.size() - n; i++)
+				digit[i] = digit[i + n];
+			for (size_t i = 0; i < n; i++)
 				digit.pop_back();
 			return *this;
 		}
-		for (size_t i = 0; i < digit.size() - n; i++)
-			digit[i] = digit[i + n];
-		for (size_t i = 0; i < n; i++)
-			digit.pop_back();
-		return *this;
-	}
+		void ntt_init()
+		{
+			NTT_MOD = 0x3b800001;
+			NTT_ROOT = modpow(3, 119, NTT_MOD);
+			NTT_ROOTS.resize(24, 0);
+			NTT_INV_ROOTS.resize(24, 0);
+			i64 temp_root = NTT_ROOT;
+			i64 inv_root = modinv(NTT_ROOT, NTT_MOD);
+			for (size_t i = 0; i < 24; i++)
+			{
+				NTT_ROOTS[24 - i - 1] = temp_root;
+				NTT_INV_ROOTS[24 - i - 1] = inv_root;
+				temp_root *= temp_root;
+				temp_root %= NTT_MOD;
+				inv_root *= inv_root;
+				inv_root %= NTT_MOD;
+			}
+		}
+		vector<T> ntt(const vector<T> &f, FFT TYPE)
+		{
+			if (f.size() == 1) return f;
+			const size_t n(f.size());
+			vector<T> f0;
+			vector<T> f1;
+			for (size_t i = 0; i < n; i++)
+				i % 2 == 0 ? f0.push_back(f[i]) : f1.push_back(f[i]);
+			const vector<T> dft0 = ntt(f0, TYPE);
+			const vector<T> dft1 = ntt(f1, TYPE);
+			size_t root_n = 0;
+			for (size_t i = 0; i < 24; i++)
+				if ((n >> i) & 1) root_n = i;
+			const i64 zeta = TYPE == FFT::NORMAL ? NTT_ROOTS[root_n] : NTT_INV_ROOTS[root_n];
+			i64 zeta_pow = 1;
+			vector<T> ret(n);
+			for (size_t i = 0; i < n; i++)
+			{
+				ret[i] = dft0[i % (n / 2)] + zeta_pow * dft1[i % (n / 2)];
+				ret[i] %= NTT_MOD;
+				zeta_pow *= zeta;
+				zeta_pow %= NTT_MOD;
+			}
+			return ret;
+		}
 
-public:
-	BigInt() : neg(false) { digit.push_back(0); }
-	explicit BigInt(string &&s) : neg(s[0] == '-')
-	{
-		for_each(s.crbegin(), s.crend() - neg, [&](const char &c) { digit.push_back(c - '0'); });
-		if (digit.size() == 1 && digit[0] == 0) neg = false;
-	}
-	explicit BigInt(i64 &&i) : neg(i < 0)
-	{
-		if (i == 0) digit.push_back(0);
-		if (neg) i = -i;
-		while (i > 0)
+	public:
+		void show_roots()
 		{
-			digit.push_back(i % 10);
-			i /= 10;
+			REP(i, 24) { cout << BigInt::NTT_ROOTS[i] << " "; }
+			cout << endl;
+			REP(i, 24) { cout << BigInt::NTT_INV_ROOTS[i] << " "; }
+			cout << endl;
 		}
-	}
-	bool getNeg() const { return neg; }
-	vector<T> getDigit() const { return digit; }
-	BigInt operator-() const
-	{
-		BigInt b(*this);
-		b.neg = !b.neg;
-		return b;
-	}
-	BigInt operator+() const
-	{
-		BigInt b(*this);
-		return b;
-	}
-	BigInt &operator+=(const BigInt &rhs)
-	{
-		size_t n(max(digit.size(), rhs.digit.size()));
-		bool diff(neg ^ rhs.neg);
-		for (size_t i = 0; i < n; i++)
+		BigInt() : neg(false)
 		{
-			if (i >= digit.size()) { digit.push_back(diff ? -rhs.digit[i] : rhs.digit[i]); }
-			else
-				digit[i] += i < rhs.digit.size() ? diff ? -rhs.digit[i] : rhs.digit[i] : 0;
+			digit.push_back(0);
+			ntt_init();
 		}
-		carry_and_fix();
-		if (digit.back() < 0)
+		BigInt(const string &s) : neg(s[0] == '-')
 		{
-			for_each(digit.begin(), digit.end(), [](int &i) { i = -i; });
-			neg = !neg;
+			for_each(s.crbegin(), s.crend() - neg, [&](const char &c) { digit.push_back(c - '0'); });
+			if (digit.size() == 1 && digit[0] == 0) neg = false;
+			ntt_init();
+		}
+		BigInt(string &&s) : BigInt(s) {}
+		BigInt(i64 &&i) : neg(i < 0)
+		{
+			if (i == 0) digit.push_back(0);
+			if (neg) i = -i;
+			while (i > 0)
+			{
+				digit.push_back(i % 10);
+				i /= 10;
+			}
+			ntt_init();
+		}
+		bool getNeg() const { return neg; }
+		vector<T> getDigit() const { return digit; }
+		BigInt operator-() const
+		{
+			BigInt b(*this);
+			b.neg = !b.neg;
+			return b;
+		}
+		BigInt operator+() const
+		{
+			BigInt b(*this);
+			return b;
+		}
+		BigInt &operator+=(const BigInt &rhs)
+		{
+			size_t n(max(digit.size(), rhs.digit.size()));
+			bool diff(neg ^ rhs.neg);
+			for (size_t i = 0; i < n; i++)
+			{
+				if (i >= digit.size()) { digit.push_back(diff ? -rhs.digit[i] : rhs.digit[i]); }
+				else
+					digit[i] += i < rhs.digit.size() ? diff ? -rhs.digit[i] : rhs.digit[i] : 0;
+			}
 			carry_and_fix();
+			if (digit.back() < 0)
+			{
+				for_each(digit.begin(), digit.end(), [](T &i) { i = -i; });
+				neg = !neg;
+				carry_and_fix();
+			}
+			return *this;
 		}
-		return *this;
+		BigInt &operator-=(const BigInt &rhs) { return *this += -rhs; }
+		BigInt &operator*=(const BigInt &rhs)
+		{
+			const size_t n(ceil_pow(digit.size() + rhs.digit.size() - 1));
+			vector<T> a(n), b(n);
+			for (size_t i = 0; i < n; i++)
+			{
+				a[i] = i < digit.size() ? digit[i] : 0;
+				b[i] = i < rhs.digit.size() ? rhs.digit[i] : 0;
+			}
+			const vector<T> dft_a(ntt(a, FFT::NORMAL));
+			const vector<T> dft_b(ntt(b, FFT::NORMAL));
+
+			vector<T> accum(n);
+			for (size_t i = 0; i < n; i++)
+				accum[i] = dft_a[i] * dft_b[i] % NTT_MOD;
+			const vector<T> ret(ntt(accum, FFT::INVERSE));
+			digit.resize(n, 0);
+			for (size_t i = 0; i < n; i++)
+				digit[i] = ret[i] / n;
+			neg ^= rhs.neg;
+			carry_and_fix();
+			return *this;
+		}
+		BigInt &operator/=(const BigInt &rhs)
+		{
+			if (abs(*this) < abs(rhs))
+			{
+				*this = BigInt(0);
+				return *this;
+			}
+			const bool origin_neg(neg);
+			if (abs(*this) == abs(rhs))
+			{
+				*this = BigInt(1);
+				neg = origin_neg ^ rhs.neg;
+				return *this;
+			}
+			if (neg) { neg = !neg; }
+			const size_t num_d(digit.size());
+			const size_t den_d(rhs.digit.size());
+			string init = "1";
+			for (size_t i = 0; i < num_d; i++)
+				init += "0";
+			BigInt prev(move(init));
+			const BigInt two(2);
+			while (true)
+			{
+				BigInt f(move((rhs.neg ? -rhs : rhs) * prev * prev));
+				f.cut_decade(num_d + den_d);
+				BigInt next = move(two * prev - f);
+				if (next == prev) break;
+				prev = move(next);
+			}
+			const BigInt origin(*this);
+			*this *= prev;
+			this->cut_decade(num_d + den_d);
+			if (*this * (rhs.neg ? -rhs : rhs) > origin) *this -= BigInt(1);
+			if (origin_neg) neg = !neg;
+			if (rhs.neg) neg = !neg;
+			if (digit.size() == 1 && digit[0] == 0) neg = false;
+			return *this;
+		}
+		BigInt &operator%=(const BigInt &rhs)
+		{
+			*this = move(*this - *this / rhs * rhs);
+			return *this;
+		}
+		friend istream &operator>>(istream &is, BigInt &bigint)
+		{
+			string s;
+			is >> s;
+			bigint = std::move(BigInt(std::move(s)));
+			return is;
+		}
+		friend ostream &operator<<(ostream &os, const BigInt &bigint)
+		{
+			if (bigint.neg) os << '-';
+			for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const T &i) { os << i; });
+			return os;
+		}
 	};
-	BigInt &operator-=(const BigInt &rhs) { return *this += -rhs; }
-	BigInt &operator*=(const BigInt &rhs)
+	template <class T> bool operator<(const BigInt<T> &lhs, const BigInt<T> &rhs)
 	{
-		const size_t n(ceil_pow(digit.size() + rhs.digit.size() - 1));
-		vector<complex<double>> a(n), b(n);
-		for (size_t i = 0; i < n; i++)
-		{
-			a[i] = complex<double>(static_cast<double>(i < digit.size() ? digit[i] : 0.), 0.);
-			b[i] = complex<double>(static_cast<double>(i < rhs.digit.size() ? rhs.digit[i] : 0.), 0.);
-		}
-		const vector<complex<double>> dft_a(dft(a, FFT::NORMAL));
-		const vector<complex<double>> dft_b(dft(b, FFT::NORMAL));
-		vector<complex<double>> accum(n);
-		for (size_t i = 0; i < n; i++)
-			accum[i] = dft_a[i] * dft_b[i];
-		const vector<complex<double>> ret(dft(accum, FFT::INVERSE));
-		digit.resize(n, 0);
-		for (size_t i = 0; i < n; i++)
-			digit[i] = static_cast<T>(round(ret[i].real())) / n;
-		neg ^= rhs.neg;
-		carry_and_fix();
-		return *this;
+		if (lhs.getNeg() != rhs.getNeg()) return lhs.getNeg();
+		const vector<T> &lhs_digit = lhs.getDigit();
+		const vector<T> &rhs_digit = rhs.getDigit();
+		const size_t lhs_n = lhs_digit.size();
+		const size_t rhs_n = rhs_digit.size();
+		if (lhs_n != rhs_n) return (lhs_n < rhs_n) ^ lhs.getNeg();
+		return lexicographical_compare(lhs_digit.crbegin(), lhs_digit.crend(), rhs_digit.crbegin(), rhs_digit.crend());
 	}
-	BigInt &operator/=(const BigInt &rhs)
-	{
-		if (abs(*this) < abs(rhs))
-		{
-			*this = BigInt(0);
-			return *this;
-		}
-		const bool origin_neg(neg);
-		if (abs(*this) == abs(rhs))
-		{
-			*this = BigInt(1);
-			neg = origin_neg ^ rhs.neg;
-			return *this;
-		}
-		if (neg) { neg = !neg; }
-		const size_t num_d(digit.size());
-		const size_t den_d(rhs.digit.size());
-		string init = "1";
-		for (size_t i = 0; i < num_d; i++)
-			init += "0";
-		BigInt prev(move(init));
-		const BigInt two(2);
-		while (true)
-		{
-			BigInt f(move((rhs.neg ? -rhs : rhs) * prev * prev));
-			f.cut_decade(num_d + den_d);
-			BigInt next = move(two * prev - f);
-			if (next == prev) break;
-			prev = move(next);
-		}
-		const BigInt origin(*this);
-		*this *= prev;
-		this->cut_decade(num_d + den_d);
-		if (*this * (rhs.neg ? -rhs : rhs) > origin) *this -= BigInt(1);
-		if (origin_neg) neg = !neg;
-		if (rhs.neg) neg = !neg;
-		if (digit.size() == 1 && digit[0] == 0) neg = false;
-		return *this;
-	}
-	BigInt &operator%=(const BigInt &rhs)
-	{
-		*this = move(*this - *this / rhs * rhs);
-		return *this;
-	}
-	friend istream &operator>>(istream &is, BigInt &bigint)
-	{
-		string s;
-		is >> s;
-		bigint = std::move(BigInt(std::move(s)));
-		return is;
-	}
-	friend ostream &operator<<(ostream &os, const BigInt &bigint)
-	{
-		if (bigint.neg) os << '-';
-		for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const T &i) { os << i; });
-		return os;
-	}
-};
-template <class T> bool operator<(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	if (lhs.getNeg() != rhs.getNeg()) return lhs.getNeg();
-	const vector<T> &lhs_digit = lhs.getDigit();
-	const vector<T> &rhs_digit = rhs.getDigit();
-	const size_t lhs_n = lhs_digit.size();
-	const size_t rhs_n = rhs_digit.size();
-	if (lhs_n != rhs_n) return (lhs_n < rhs_n) ^ lhs.getNeg();
-	return lexicographical_compare(lhs_digit.crbegin(), lhs_digit.crend(), rhs_digit.crbegin(), rhs_digit.crend());
-}
-template <class T> bool operator>(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	return rhs < lhs;
-}
-template <class T> bool operator<=(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	return !(lhs > rhs);
-}
-template <class T> bool operator>=(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	return !(lhs < rhs);
-}
-template <class T> bool operator==(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	return !(lhs < rhs || lhs > rhs);
-}
-template <class T> bool operator!=(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	return !(rhs == lhs);
-}
-template <class T> BigInt<T> operator+(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	return BigInt<T>(lhs) += rhs;
-}
-template <class T> BigInt<T> operator-(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	return BigInt<T>(lhs) -= rhs;
-}
-template <class T> BigInt<T> operator*(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	return BigInt<T>(lhs) *= rhs;
-}
-template <class T> BigInt<T> operator/(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	return BigInt<T>(lhs) /= rhs;
-}
-template <class T> BigInt<T> operator%(const BigInt<T> &lhs, const BigInt<T> &rhs)
-{
-	return BigInt<T>(lhs) %= rhs;
-}
-template <class T> BigInt<T> abs(const BigInt<T> &x)
-{
-	return x.getNeg() ? -x : x;
-}
+	template <class T> bool operator>(const BigInt<T> &lhs, const BigInt<T> &rhs) { return rhs < lhs; }
+	template <class T> bool operator<=(const BigInt<T> &lhs, const BigInt<T> &rhs) { return !(lhs > rhs); }
+	template <class T> bool operator>=(const BigInt<T> &lhs, const BigInt<T> &rhs) { return !(lhs < rhs); }
+	template <class T> bool operator==(const BigInt<T> &lhs, const BigInt<T> &rhs) { return !(lhs < rhs || lhs > rhs); }
+	template <class T> bool operator!=(const BigInt<T> &lhs, const BigInt<T> &rhs) { return !(rhs == lhs); }
+	template <class T> BigInt<T> operator+(const BigInt<T> &lhs, const BigInt<T> &rhs) { return BigInt<T>(lhs) += rhs; }
+	template <class T> BigInt<T> operator-(const BigInt<T> &lhs, const BigInt<T> &rhs) { return BigInt<T>(lhs) -= rhs; }
+	template <class T> BigInt<T> operator*(const BigInt<T> &lhs, const BigInt<T> &rhs) { return BigInt<T>(lhs) *= rhs; }
+	template <class T> BigInt<T> operator/(const BigInt<T> &lhs, const BigInt<T> &rhs) { return BigInt<T>(lhs) /= rhs; }
+	template <class T> BigInt<T> operator%(const BigInt<T> &lhs, const BigInt<T> &rhs) { return BigInt<T>(lhs) %= rhs; }
+	template <class T> BigInt<T> abs(const BigInt<T> &x) { return x.getNeg() ? -x : x; }
+} // namespace
 
 int main()
 {
 	using b = BigInt<>;
-	assert(b(121) / b(11) == b(11));
-	assert(b(20) * b(20) == b(400));
-	assert(b(576556489728) / b(13752172) == b(41924));
-	assert(b(972290618421) / b(68921105) == b(14107));
-	assert(b(245177114802) / b(4584054) == b(53484));
-	assert(b(553221833535) / b(32791261) == b(16871));
-	assert(b(170959299394) / b(3409750) == b(50138));
-	assert(b(418727655820) / b(20701453) == b(20226));
-	assert(b(414673749104) / b(27620304) == b(15013));
-	assert(b(383152136535) / b(2443200) == b(156823));
-	assert(b(487711634957) / b(4752361) == b(102625));
-	assert(b(-39676640719) / b(1330846) == b(-29813));
-	assert(b(0) / b(2) == b(0));
-	assert(b(0) / b(-2) == b(0));
-	assert(b(-10) / b(3) == b(-3));
-	assert(b(-1) / b(3) == b(0));
-	assert(b(12) / b(-3) == b(-4));
-	assert(b(14) / b(-3) == b(-4));
-	assert(b(23) / b(22) == b(1));
-	assert(b(23) / b(28) == b(0));
-	assert(abs(b(-999)) == b(999));
-	assert(b(5) / b(8) == b(0));
-	assert(b(8) / b(7) == b(1));
-	assert(b(8) / b(8) == b(1));
-	assert(b(8) / b(7) == b(1));
-	assert(b(8) / b(-7) == b(-1));
-	assert(b(-8) / b(8) == b(-1));
-	assert(b(8) / b(-8) == b(-1));
-	assert(b(4) / b(-3) == b(-1));
-	assert(b(123454121) / b(-1) == b(-123454121));
-	assert(b(123454121) / b(123454120) == b(1));
-	assert(b(-123454121) / b(-123454120) == b(1));
-	assert(b(123454121) / b(-123454120) == b(-1));
-	assert(b(-123454121) / b(123454120) == b(-1));
-	assert(b(9) / b(4) == b(2));
-	assert(b(9) / b(7) == b(1));
-	assert(b(10000) / b(9999) == b(1));
-	assert(b(9999) / b(9998) == b(1));
-	assert(b(9999) / b(4998) == b(2));
-	assert(b("8325465154685413215465465154231546876854132656544132135684543121325674413213213154656") /
-			   b("4545421546568413534541321345") ==
-		   b("1831615631111433575420527610370121692069410934870793669338"));
-	assert(b(537891253006) % b(406355) == b(358571));
-	assert(b(95971699922) % b(9438052) == b(5587186));
-	assert(b(641325680486) % b(30919259) == b(29329567));
-	assert(b(112274294521) % b(2633654) == b(1624501));
-	assert(b(591834298908) % b(47251195) == b(13081533));
-	assert(b(822370066918) % b(63394160) == b(21023398));
-	assert(b(447454199825) % b(33265597) == b(31920175));
-	assert(b(655395348763) % b(40017336) == b(31437091));
-	assert(b(611085654973) % b(29377082) == b(12972291));
-	assert(b(203928983064) % b(14485770) == b(12798774));
-	assert(b(10000) / b(9999) == b(1));
-	assert(b("100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-			 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-			 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-			 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-			 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-			 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-			 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-			 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-			 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-			 "0000000000000000000000000000000000000000000000000000000") %
-			   b("99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
-				 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
-				 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
-				 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
-				 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
-				 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
-				 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
-				 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
-				 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
-				 "999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999") ==
-		   b("1"));
-	string max_a_str = "2";
-	REP(i, 10000) max_a_str += "0000000000";
+	// assert(b("9871248059959875101") * b("2451597548645885739") == b("24200327545873085124057352587957084639"));
+	// assert(b("5417178119015881739") * b("7070568190868137937") == b("38302527292580585365179270453131432443"));
+	// assert(b("8500329381064712267") * b("3754035012430578874") == b("31910534113709281941551852933058847358"));
+	// assert(b("4384737841418311296") * b("8081474645744519175") == b("35435147693658634977625131875991100800"));
+	// assert(b("1948433415680940491") * b("9094706378761168124") == b("17720429814184860104288925254090108884"));
+	// assert(b("1297952944423169227") * b("1910527904790538240") == b("2479775319425507428584720223934740480"));
+	// assert(b("3146240118335948676") * b("5252587216292975036") == b("16525900624959501020723844839445252336"));
+	// assert(b("3178753420079614848") * b("9351388055064627833") == b("29725756762528343383768924835100864384"));
+	// assert(b("1026418975796184935") * b("1408223064072214768") == b("1445426875117567996884259950366120080"));
+	// assert(b("4420340833876426013") * b("3104789164637579421") == b("13724226325024569949695712014917878473"));
+	// assert(b(537891253006) % b(406355) == b(358571));
+	// assert(b(95971699922) % b(9438052) == b(5587186));
+	// assert(b(641325680486) % b(30919259) == b(29329567));
+	// assert(b(112274294521) % b(2633654) == b(1624501));
+	// assert(b(591834298908) % b(47251195) == b(13081533));
+	// assert(b(822370066918) % b(63394160) == b(21023398));
+	// assert(b(447454199825) % b(33265597) == b(31920175));
+	// assert(b(655395348763) % b(40017336) == b(31437091));
+	// assert(b(611085654973) % b(29377082) == b(12972291));
+	// assert(b(203928983064) % b(14485770) == b(12798774));
+	// assert(b(10000) / b(9999) == b(1));
+	// assert(b("100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	// 		 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	// 		 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	// 		 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	// 		 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	// 		 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	// 		 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	// 		 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	// 		 "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+	// 		 "0000000000000000000000000000000000000000000000000000000") %
+	// 		   b("99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+	// 			 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+	// 			 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+	// 			 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+	// 			 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+	// 			 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+	// 			 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+	// 			 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+	// 			 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+	// 			 "999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999") ==
+	// 	   b("1"));
+	i64 times = 204;
+	string max_a_str = "1";
+	REP(i, times) max_a_str += "0000000000";
 	string max_b_str = "2";
-	REP(i, 10000) max_b_str += "0000000000";
-	string max_ans_str = "4";
-	REP(i, 20000) max_ans_str += "0000000000";
-	assert(b(move(max_a_str)) * b(move(max_b_str)) == b(move(max_ans_str)));
+	REP(i, times) max_b_str += "0000000000";
+	string max_ans_str = "1";
+	REP(i, 2 * times) max_ans_str += "0000000000";
+	// assert(b(move(max_a_str)) * b(move(max_b_str)) == b(move(max_ans_str)));
+	// b max_nines(max_a_str)
+	cout << (b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) << endl;
+	cout << "----" << endl;
+	cout << (b(max_ans_str) - b(max_b_str) + b(1)) << endl;
+	assert((b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) == (b(max_ans_str) - b(max_b_str) + b(1)));
 	cout << "assertion is all clear!" << endl;
 }
 
@@ -393,6 +378,24 @@ i64 modpow(i64 base, i64 ex, i64 mod)
 		base %= mod;
 	}
 	return ans;
+}
+
+i64 modinv(i64 a, i64 mod)
+{
+	i64 b = mod;
+	i64 x = 1;
+	i64 y = 0;
+	while (b)
+	{
+		i64 t = a / b;
+		a -= t * b;
+		swap(a, b);
+		x -= t * y;
+		swap(x, y);
+	}
+	x %= mod;
+	if (x < 0) x += mod;
+	return x;
 }
 
 i64 gcd(i64 a, i64 b)

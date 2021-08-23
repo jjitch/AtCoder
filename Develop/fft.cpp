@@ -1,5 +1,8 @@
 #define _USE_MATH_DEFINES
 #include <bits/stdc++.h>
+
+#include <atcoder/all>
+using namespace atcoder;
 using namespace std;
 using i64 = long long;
 using vi = vector<i64>;
@@ -15,38 +18,30 @@ using vvi = vector<vi>;
 #define REVERSE(a) reverse(a.begin(), a.end())
 constexpr i64 INF64 = 1LL << 60LL;
 constexpr i64 MOD = 1000000007;
-inline i64 modpow(i64, i64, i64 = INF64);
+inline i64 modpow(i64, i64, i64 = 0);
+inline i64 modinv(i64, i64);
 inline i64 gcd(i64, i64);
 template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
 
-i64 ceil_pow(i64 n){
-	
-}
-
 int main()
 {
-	complex<double> c(1., 2.);
-	cout << c << endl;
-	vector<double> arr{3., 4., 2., 9., 7., 6., 2., 8.};
-	REP(i, arr.size()) cout << arr[i] << " ";
-	cout << endl;
-	vector<complex> freq(8);
+	
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
 {
 	i64 ans = 1;
-	while (ex > 0)
+	while (ex)
 	{
-		if (ex % 2 == 1)
+		if (ex & 1 == 1)
 		{
 			ans *= base;
-			ans %= mod;
+			if (mod) ans %= mod;
 		}
-		ex /= 2;
+		ex >>= 1;
 		base *= base;
-		base %= mod;
+		if (mod) base %= mod;
 	}
 	return ans;
 }
@@ -55,6 +50,24 @@ i64 gcd(i64 a, i64 b)
 {
 	if (b == 0) return a;
 	return gcd(b, a % b);
+}
+
+i64 modinv(i64 a, i64 mod)
+{
+	i64 b = mod;
+	i64 x = 1;
+	i64 y = 0;
+	while (b)
+	{
+		i64 t = a / b;
+		a -= t * b;
+		swap(a, b);
+		x -= t * y;
+		swap(x, y);
+	}
+	x %= mod;
+	if (x < 0) x += mod;
+	return x;
 }
 
 template <class T> inline bool chmax(T &a, T b)
