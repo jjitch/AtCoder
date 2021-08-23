@@ -7,3 +7,4 @@ AlignEscapedNewlines: DontAlign
 AccessModifierOffset: -4
 UseTab: Always
 TabWidth: 4
+NamespaceIndentation: All
