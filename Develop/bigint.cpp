@@ -153,8 +153,8 @@ namespace
 			if (digit.size() == 1 && digit[0] == 0) neg = false;
 			ntt_init();
 		}
-		BigInt(string &&s) : BigInt(s) {}
-		BigInt(i64 &&i) : neg(i < 0)
+		// BigInt(string &&s) : BigInt(s) {}
+		BigInt(i64 i) : neg(i < 0)
 		{
 			if (i == 0) digit.push_back(0);
 			if (neg) i = -i;
@@ -216,7 +216,7 @@ namespace
 			const vector<T> ret(ntt(accum, FFT::INVERSE));
 			digit.resize(n, 0);
 			for (size_t i = 0; i < n; i++)
-				digit[i] = ret[i] / n;
+				digit[i] = ret[i]/n;
 			neg ^= rhs.neg;
 			// carry_and_fix();
 			return *this;
@@ -275,7 +275,7 @@ namespace
 		friend ostream &operator<<(ostream &os, const BigInt &bigint)
 		{
 			if (bigint.neg) os << '-';
-			for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const T &i) { os << i << "\n"; });
+			for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const T &i) { os << i<<"\n"; });
 			return os;
 		}
 	};
@@ -347,7 +347,7 @@ int main()
 	// 			 "99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
 	// 			 "999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999") ==
 	// 	   b("1"));
-	i64 times = 409;
+	i64 times = 20000;
 	string max_a_str = "1";
 	REP(i, times) max_a_str += "0000000000";
 	string max_b_str = "2";
@@ -356,11 +356,13 @@ int main()
 	REP(i, 2 * times) max_ans_str += "0000000000";
 	// cout << (b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) << endl;
 	// cout << "----" << endl;
+	// cout << (b(max_ans_str) - b(max_b_str) + b(1)) << endl;
+
 	ofstream outfile("test.txt");
 	outfile << (b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) << endl;
 	outfile.close();
-	// cout << (b(max_ans_str) - b(max_b_str) + b(1)) << endl;
-	// assert((b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) == (b(max_ans_str) - b(max_b_str) + b(1)));
+
+	assert((b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) == (b(max_ans_str) - b(max_b_str) + b(1)));
 	cout << "assertion is all clear!" << endl;
 }
 
