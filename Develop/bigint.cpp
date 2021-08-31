@@ -171,6 +171,14 @@ namespace
 				digit.pop_back();
 			return *this;
 		}
+		T garner(pair<T, T> rem, pair<i64, i64> mod)
+		{
+			i64 x1 = rem.first;
+			i64 sub = rem.second - rem.first;
+			if (sub < 0) sub += mod.second;
+			i64 x2 = sub * modinv(mod.first, mod.second) % mod.second;
+			return x1 + x2 * mod.first;
+		}
 
 	public:
 		BigInt() : neg(false) { digit.push_back(0); }
@@ -226,20 +234,51 @@ namespace
 		BigInt &operator*=(const BigInt &rhs)
 		{
 			const size_t n(ceil_pow(digit.size() + rhs.digit.size() - 1));
+			const i64 mod1 = ntt1.getMod();
+			const i64 mod2 = ntt2.getMod();
+			cout << mod1 << " " << mod2 << endl;
 			vector<T> a(n), b(n);
 			for (size_t i = 0; i < n; i++)
 			{
 				a[i] = i < digit.size() ? digit[i] : 0;
 				b[i] = i < rhs.digit.size() ? rhs.digit[i] : 0;
 			}
-			const vector<T> dft_a(ntt1.ntt(a, NTT::DIRECTION::NORMAL));
-			const vector<T> dft_b(ntt1.ntt(b, NTT::DIRECTION::NORMAL));
+			const vector<T> a1(ntt1.ntt(a, NTT::DIRECTION::NORMAL));
+			const vector<T> b1(ntt1.ntt(b, NTT::DIRECTION::NORMAL));
+			const vector<T> a2(ntt2.ntt(a, NTT::DIRECTION::NORMAL));
+			const vector<T> b2(ntt2.ntt(b, NTT::DIRECTION::NORMAL));
 
-			vector<T> accum(n);
+			vector<T> accum1(n), accum2(n);
 			for (size_t i = 0; i < n; i++)
-				accum[i] = dft_a[i] * dft_b[i] % ntt1.getMod();
-			const vector<T> ret(ntt1.ntt(accum, NTT::DIRECTION::INVERSE));
+			{
+				accum1[i] = a1[i] * b1[i] % mod1;
+				accum2[i] = a2[i] * b2[i] % mod2;
+			}
+			const vector<T> ret1(ntt1.ntt(accum1, NTT::DIRECTION::INVERSE));
+			const vector<T> ret2(ntt2.ntt(accum2, NTT::DIRECTION::INVERSE));
+			for (size_t i = 0; i < n; i++)
+			{
+				cout << ret1[i] % n << " ";
+			}
+			cout << "\n-----\n";
+			for (size_t i = 0; i < n; i++)
+			{
+				cout << ret2[i] % n << " ";
+			}
+			cout << "\n-----\n";
+			vector<T> ret(n);
+
+			for (size_t i = 0; i < n; i++)
+			{
+				ret[i] = garner({ret1[i], ret2[i]}, {mod1, mod2});
+			}
+
 			digit.resize(n, 0);
+			for (size_t i = 0; i < n; i++)
+			{
+				cout<<ret[i] % n << " ";
+			}
+			
 			for (size_t i = 0; i < n; i++)
 				digit[i] = ret[i] / n;
 			neg ^= rhs.neg;
@@ -327,7 +366,7 @@ namespace
 	template <class T> BigInt<T> abs(const BigInt<T> &x) { return x.getNeg() ? -x : x; }
 
 	template <> NTT BigInt<>::ntt1 = NTT(119, 23);
-	template <> NTT BigInt<>::ntt2 = NTT(39, 22);
+	template <> NTT BigInt<>::ntt2 = NTT(7, 26);
 
 } // namespace
 
@@ -345,7 +384,7 @@ int main()
 	// assert(b(591834298908) % b(47251195) == b(13081533));
 	// assert(b(822370066918) % b(63394160) == b(21023398));
 	b test(3);
-	i64 times = 204;
+	i64 times = 300;
 	string max_a_str = "1";
 	REP(i, times) max_a_str += "0000000000";
 	string max_b_str = "2";
@@ -359,6 +398,7 @@ int main()
 	// ofstream outfile("test.txt");
 	// outfile << (b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) << endl;
 	// outfile.close();
+	// cout << b(9999) * b(9999) << endl;
 
 	assert((b(max_a_str) - b(1)) * (b(max_a_str) - b(1)) == (b(max_ans_str) - b(max_b_str) + b(1)));
 	cout << "assertion is all clear!" << endl;
