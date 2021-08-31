@@ -236,7 +236,6 @@ namespace
 			const size_t n(ceil_pow(digit.size() + rhs.digit.size() - 1));
 			const i64 mod1 = ntt1.getMod();
 			const i64 mod2 = ntt2.getMod();
-			cout << mod1 << " " << mod2 << endl;
 			vector<T> a(n), b(n);
 			for (size_t i = 0; i < n; i++)
 			{
@@ -254,33 +253,20 @@ namespace
 				accum1[i] = a1[i] * b1[i] % mod1;
 				accum2[i] = a2[i] * b2[i] % mod2;
 			}
-			const vector<T> ret1(ntt1.ntt(accum1, NTT::DIRECTION::INVERSE));
-			const vector<T> ret2(ntt2.ntt(accum2, NTT::DIRECTION::INVERSE));
+			vector<T> ret1(ntt1.ntt(accum1, NTT::DIRECTION::INVERSE));
+			vector<T> ret2(ntt2.ntt(accum2, NTT::DIRECTION::INVERSE));
+			const i64 inv1_n = modinv(n, mod1);
+			const i64 inv2_n = modinv(n, mod2);
 			for (size_t i = 0; i < n; i++)
 			{
-				cout << ret1[i] % n << " ";
+				ret1[i] *= inv1_n;
+				ret1[i] %= mod1;
+				ret2[i] *= inv2_n;
+				ret2[i] %= mod2;
 			}
-			cout << "\n-----\n";
-			for (size_t i = 0; i < n; i++)
-			{
-				cout << ret2[i] % n << " ";
-			}
-			cout << "\n-----\n";
-			vector<T> ret(n);
-
-			for (size_t i = 0; i < n; i++)
-			{
-				ret[i] = garner({ret1[i], ret2[i]}, {mod1, mod2});
-			}
-
 			digit.resize(n, 0);
 			for (size_t i = 0; i < n; i++)
-			{
-				cout<<ret[i] % n << " ";
-			}
-			
-			for (size_t i = 0; i < n; i++)
-				digit[i] = ret[i] / n;
+				digit[i] = garner({ret1[i], ret2[i]}, {mod1, mod2});
 			neg ^= rhs.neg;
 			carry_and_fix();
 			return *this;
@@ -339,7 +325,7 @@ namespace
 		friend ostream &operator<<(ostream &os, const BigInt &bigint)
 		{
 			if (bigint.neg) os << '-';
-			for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const T &i) { os << i << "\n"; });
+			for_each(bigint.digit.crbegin(), bigint.digit.crend(), [&](const T &i) { os << i; });
 			return os;
 		}
 	};
@@ -384,7 +370,7 @@ int main()
 	// assert(b(591834298908) % b(47251195) == b(13081533));
 	// assert(b(822370066918) % b(63394160) == b(21023398));
 	b test(3);
-	i64 times = 300;
+	i64 times = 20000;
 	string max_a_str = "1";
 	REP(i, times) max_a_str += "0000000000";
 	string max_b_str = "2";

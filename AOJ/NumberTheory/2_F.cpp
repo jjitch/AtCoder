@@ -23,21 +23,104 @@ template <class T> inline bool chmin(T &a, T b);
 
 namespace
 {
-	template <class T = i64> class BigInt
+	class NTT
 	{
-	private:
-		i64 NTT_MOD;
-		i64 NTT_ROOT;
-		vector<i64> NTT_ROOTS;
-		vector<i64> NTT_INV_ROOTS;
-		vector<T> digit;
-		bool neg;
-		enum FFT
+		vector<i64> roots;
+		vector<i64> inv_roots;
+		const i64 mod;
+		const i64 primitive_root;
+		const i64 mod_mantissa;
+		const i64 mod_exponent;
+		i64 seek_min_primitive_root(i64 _man, i64 _exp)
+		{
+			set<int> factors;
+			i64 mod = _man * (1 << _exp) + 1;
+			i64 fac = 3;
+			while (_man > 1)
+			{
+				while (!(_man % fac))
+				{
+					factors.insert(fac);
+					_man /= fac;
+				}
+				fac += 2;
+			}
+			i64 primitive = 2;
+			bool found = true;
+			while (1)
+			{
+				if (modpow(primitive, (mod - 1) / 2, mod) == 1) found = false;
+				for (i64 &&i : factors)
+				{
+					if (modpow(primitive, (mod - 1) / i, mod) == 1) found = false;
+				}
+				if (found) break;
+				primitive++;
+				found = true;
+			}
+			return primitive;
+		}
+
+	public:
+		enum DIRECTION
 		{
 			NORMAL,
 			INVERSE,
 		};
-		void carry_and_fix()
+		explicit NTT(i64 _man, i64 _exp)
+			: mod_mantissa(_man), mod_exponent(_exp), mod(_man * (1 << _exp) + 1),
+			  primitive_root(modpow(seek_min_primitive_root(_man, _exp), _man, mod))
+		{
+			roots.resize(_exp + 1);
+			inv_roots.resize(_exp + 1);
+			i64 root = primitive_root;
+			i64 inv_root = modinv(primitive_root, mod);
+			for (size_t i = 0; i <= _exp; i++)
+			{
+				roots[_exp - i] = root;
+				inv_roots[_exp - i] = inv_root;
+				root *= root;
+				root %= mod;
+				inv_root *= inv_root;
+				inv_root %= mod;
+			}
+		}
+		vector<i64> ntt(const vector<i64> &f, DIRECTION TYPE)
+		{
+			if (f.size() == 1) return f;
+			const size_t n(f.size());
+			vector<i64> f0;
+			vector<i64> f1;
+			for (size_t i = 0; i < n; i++)
+				i % 2 == 0 ? f0.push_back(f[i]) : f1.push_back(f[i]);
+			const vector<i64> dft0 = ntt(f0, TYPE);
+			const vector<i64> dft1 = ntt(f1, TYPE);
+			size_t root_n = 0;
+			for (size_t i = 0; i < 24; i++)
+				if ((n >> i) & 1) root_n = i;
+			const i64 zeta = TYPE == DIRECTION::NORMAL ? roots[root_n] : inv_roots[root_n];
+			i64 zeta_pow = 1;
+			vector<i64> ret(n);
+			for (size_t i = 0; i < n; i++)
+			{
+				ret[i] = dft0[i % (n / 2)] + zeta_pow * dft1[i % (n / 2)];
+				ret[i] %= mod;
+				zeta_pow *= zeta;
+				zeta_pow %= mod;
+			}
+			return ret;
+		}
+		i64 getMod() { return mod; }
+	};
+
+	template <class T = i64> class BigInt
+	{
+	private:
+		static NTT ntt1;
+		static NTT ntt2;
+		vector<T> digit;
+		bool neg;
+		BigInt &carry_and_fix()
 		{
 			const size_t n(digit.size());
 			REP(i, n - 1)
@@ -64,11 +147,12 @@ namespace
 			while (digit.size() >= 2 && digit.back() == 0)
 				digit.pop_back();
 			if (digit.size() == 1 && digit[0] == 0) neg = false;
+			return *this;
 		}
 		size_t ceil_pow(const size_t i)
 		{
 			size_t n = 1;
-			while (i >= n)
+			while (i > n)
 				n <<= 1;
 			return n;
 		}
@@ -87,70 +171,24 @@ namespace
 				digit.pop_back();
 			return *this;
 		}
-		void ntt_init()
+		T garner(pair<T, T> rem, pair<i64, i64> mod)
 		{
-			NTT_MOD = 0x3b800001;
-			NTT_ROOT = modpow(3, 119, NTT_MOD);
-			NTT_ROOTS.resize(24, 0);
-			NTT_INV_ROOTS.resize(24, 0);
-			i64 temp_root = NTT_ROOT;
-			i64 inv_root = modinv(NTT_ROOT, NTT_MOD);
-			for (size_t i = 0; i < 24; i++)
-			{
-				NTT_ROOTS[24 - i - 1] = temp_root;
-				NTT_INV_ROOTS[24 - i - 1] = inv_root;
-				temp_root *= temp_root;
-				temp_root %= NTT_MOD;
-				inv_root *= inv_root;
-				inv_root %= NTT_MOD;
-			}
-		}
-		vector<T> ntt(const vector<T> &f, FFT TYPE)
-		{
-			if (f.size() == 1) return f;
-			const size_t n(f.size());
-			vector<T> f0;
-			vector<T> f1;
-			for (size_t i = 0; i < n; i++)
-				i % 2 == 0 ? f0.push_back(f[i]) : f1.push_back(f[i]);
-			const vector<T> dft0 = ntt(f0, TYPE);
-			const vector<T> dft1 = ntt(f1, TYPE);
-			size_t root_n = 0;
-			for (size_t i = 0; i < 24; i++)
-				if ((n >> i) & 1) root_n = i;
-			const i64 zeta = TYPE == FFT::NORMAL ? NTT_ROOTS[root_n] : NTT_INV_ROOTS[root_n];
-			i64 zeta_pow = 1;
-			vector<T> ret(n);
-			for (size_t i = 0; i < n; i++)
-			{
-				ret[i] = dft0[i % (n / 2)] + zeta_pow * dft1[i % (n / 2)];
-				ret[i] %= NTT_MOD;
-				zeta_pow *= zeta;
-				zeta_pow %= NTT_MOD;
-			}
-			return ret;
+			i64 x1 = rem.first;
+			i64 sub = rem.second - rem.first;
+			if (sub < 0) sub += mod.second;
+			i64 x2 = sub * modinv(mod.first, mod.second) % mod.second;
+			return x1 + x2 * mod.first;
 		}
 
 	public:
-		void show_roots()
-		{
-			REP(i, 24) { cout << BigInt::NTT_ROOTS[i] << " "; }
-			cout << endl;
-			REP(i, 24) { cout << BigInt::NTT_INV_ROOTS[i] << " "; }
-			cout << endl;
-		}
-		BigInt() : neg(false)
-		{
-			digit.push_back(0);
-			ntt_init();
-		}
-		explicit BigInt(string &&s) : neg(s[0] == '-')
+		BigInt() : neg(false) { digit.push_back(0); }
+		BigInt(const string &s) : neg(s[0] == '-')
 		{
 			for_each(s.crbegin(), s.crend() - neg, [&](const char &c) { digit.push_back(c - '0'); });
 			if (digit.size() == 1 && digit[0] == 0) neg = false;
-			ntt_init();
 		}
-		explicit BigInt(i64 &&i) : neg(i < 0)
+		BigInt(string &&s) : BigInt(s) {}
+		BigInt(i64 i) : neg(i < 0)
 		{
 			if (i == 0) digit.push_back(0);
 			if (neg) i = -i;
@@ -159,7 +197,6 @@ namespace
 				digit.push_back(i % 10);
 				i /= 10;
 			}
-			ntt_init();
 		}
 		bool getNeg() const { return neg; }
 		vector<T> getDigit() const { return digit; }
@@ -192,26 +229,44 @@ namespace
 				carry_and_fix();
 			}
 			return *this;
-		};
+		}
 		BigInt &operator-=(const BigInt &rhs) { return *this += -rhs; }
 		BigInt &operator*=(const BigInt &rhs)
 		{
 			const size_t n(ceil_pow(digit.size() + rhs.digit.size() - 1));
+			const i64 mod1 = ntt1.getMod();
+			const i64 mod2 = ntt2.getMod();
 			vector<T> a(n), b(n);
 			for (size_t i = 0; i < n; i++)
 			{
 				a[i] = i < digit.size() ? digit[i] : 0;
 				b[i] = i < rhs.digit.size() ? rhs.digit[i] : 0;
 			}
-			const vector<T> dft_a(ntt(a, FFT::NORMAL));
-			const vector<T> dft_b(ntt(b, FFT::NORMAL));
-			vector<T> accum(n);
+			const vector<T> a1(ntt1.ntt(a, NTT::DIRECTION::NORMAL));
+			const vector<T> b1(ntt1.ntt(b, NTT::DIRECTION::NORMAL));
+			const vector<T> a2(ntt2.ntt(a, NTT::DIRECTION::NORMAL));
+			const vector<T> b2(ntt2.ntt(b, NTT::DIRECTION::NORMAL));
+
+			vector<T> accum1(n), accum2(n);
 			for (size_t i = 0; i < n; i++)
-				accum[i] = dft_a[i] * dft_b[i] % NTT_MOD;
-			const vector<T> ret(ntt(accum, FFT::INVERSE));
+			{
+				accum1[i] = a1[i] * b1[i] % mod1;
+				accum2[i] = a2[i] * b2[i] % mod2;
+			}
+			vector<T> ret1(ntt1.ntt(accum1, NTT::DIRECTION::INVERSE));
+			vector<T> ret2(ntt2.ntt(accum2, NTT::DIRECTION::INVERSE));
+			const i64 inv1_n = modinv(n, mod1);
+			const i64 inv2_n = modinv(n, mod2);
+			for (size_t i = 0; i < n; i++)
+			{
+				ret1[i] *= inv1_n;
+				ret1[i] %= mod1;
+				ret2[i] *= inv2_n;
+				ret2[i] %= mod2;
+			}
 			digit.resize(n, 0);
 			for (size_t i = 0; i < n; i++)
-				digit[i] = ret[i] / n;
+				digit[i] = garner({ret1[i], ret2[i]}, {mod1, mod2});
 			neg ^= rhs.neg;
 			carry_and_fix();
 			return *this;
@@ -295,6 +350,10 @@ namespace
 	template <class T> BigInt<T> operator/(const BigInt<T> &lhs, const BigInt<T> &rhs) { return BigInt<T>(lhs) /= rhs; }
 	template <class T> BigInt<T> operator%(const BigInt<T> &lhs, const BigInt<T> &rhs) { return BigInt<T>(lhs) %= rhs; }
 	template <class T> BigInt<T> abs(const BigInt<T> &x) { return x.getNeg() ? -x : x; }
+
+	template <> NTT BigInt<>::ntt1 = NTT(119, 23);
+	template <> NTT BigInt<>::ntt2 = NTT(7, 26);
+
 } // namespace
 
 int main()
