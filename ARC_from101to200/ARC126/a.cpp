@@ -26,22 +26,31 @@ template <class T> inline bool chmin(T &a, T b);
 
 int main()
 {
-	IN_i64(n);
-	vector<pair<i64, i64>> p(n);
-	REP(i, n) cin >> p[i].first >> p[i].second;
-	sort(p.begin(), p.end());
-	i64 cnt = 0;
-	for (i64 i = 0; i < n; i++)
-		for (i64 j = i; j < n; j++)
+	IN_i64(t);
+	vvi available{{5, 0, 0}, {3, 0, 1}, {1, 0, 2}, {0, 2, 1}, {2, 2, 0}};
+	sort(available.begin(), available.end());
+	REP(_, t)
+	{
+		IN_vi(test, 3);
+		i64 ans = 0;
+		do
 		{
-			auto lb = p[i];
-			auto rt = p[j];
-			if (lb.first == rt.first || lb.second == rt.second || lb.second > rt.second) continue;
-			auto lt = *lower_bound(p.begin(), p.end(), pair<i64, i64>(lb.first, rt.second));
-			auto rb = *lower_bound(p.begin(), p.end(), pair<i64, i64>(rt.first, lb.second));
-			if (lt == pair<i64, i64>(lb.first, rt.second) && rb == pair<i64, i64>(rt.first, lb.second)) { cnt++; }
-		}
-	cout << cnt << endl;
+			i64 tmp_cnt = 0;
+			REP(i, 5)
+			{
+				auto num_set = available[i];
+				i64 cnt = INF64;
+				REP(j, 3)
+				{
+					if (num_set[j]) { cnt = min(cnt, test[j] / num_set[j]); }
+				}
+				REP(j, 3) { test[j] -= cnt * num_set[j]; }
+				tmp_cnt += cnt;
+			}
+			ans = max(ans, tmp_cnt);
+		} while (next_permutation(available.begin(), available.end()));
+		cout << ans << endl;
+	}
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)

@@ -28,24 +28,19 @@ int main()
 {
 	IN_i64(n);
 	IN_vi(a, n);
-	vi cnt(12);
-	cnt[a[0]] += 1;
+	vvi dp(n, vi(10));
+	dp[0][a[0]]++;
 	REP(i, n - 1)
 	{
 		REP(j, 10)
 		{
-			if (cnt[j])
-			{
-				i64 tmp = cnt[j];
-				cnt[j] -= tmp;
-				cnt[(a[i + 1] + j) % 10] += tmp;
-				cnt[(a[i + 1] * j) % 10] += tmp;
-				cnt[(a[i + 1] + j) % 10] %= MOD;
-				cnt[(a[i + 1] * j) % 10] %= MOD;
-			}
+			dp[i + 1][(a[i + 1] + j) % 10] += dp[i][j];
+			dp[i + 1][(a[i + 1] * j) % 10] += dp[i][j];
+			dp[i + 1][(a[i + 1] + j) % 10] %= MOD;
+			dp[i + 1][(a[i + 1] * j) % 10] %= MOD;
 		}
 	}
-	REP(i, 10) { cout << cnt[i] << endl; }
+	REP(k, 10) { cout << dp[n-1][k] << endl; }
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
