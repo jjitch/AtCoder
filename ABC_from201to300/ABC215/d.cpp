@@ -15,8 +15,8 @@ using vvi = vector<vi>;
 	vi a((n)); \
 	REP(i, n) cin >> a[i];
 #define SHOW(v) \
-	REP(i, v.size()) cout << v[i] << " "; \
-	cout << "\n";
+	REP(i, v.size() - 1) cout << v[i] << " "; \
+	cout << v.back() << "\n";
 #define SORT(a) sort(a.begin(), a.end())
 #define REVERSE(a) reverse(a.begin(), a.end())
 constexpr i64 INF64 = 1LL << 60LL;
@@ -27,15 +27,15 @@ inline i64 gcd(i64, i64);
 template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
 
-vi defac(i64 n){
+vi defac(i64 n)
+{
 	vi res;
-	for (i64 i = 2; i*i<=n;i++){
-		if (n%i==0) {
+	for (i64 i = 2; i * i <= n; i++)
+	{
+		while (n % i == 0)
+		{
 			res.push_back(i);
-			while (n%i==0)
-			{
-				n /= i;
-			}
+			n /= i;
 		}
 	}
 	if (n != 1) res.push_back(n);
@@ -44,13 +44,36 @@ vi defac(i64 n){
 
 int main()
 {
-	// IN_i64(n);
-	// IN_i64(m);
-	// IN_vi(a, n);
-	// vi fac(n + 10);
-	vi res = defac(49);
-	cout << res.size() << endl;
-	SHOW(res);
+	IN_i64(n);
+	IN_i64(m);
+	IN_vi(a, n);
+	vi hurui(100010);
+	REP(i, n)
+	{
+		if (a[i] == 1) continue;
+		vi facs = defac(a[i]);
+		for (size_t j = 0; j < facs.size(); j++)
+		{
+			if (facs[j] > m) continue;
+			i64 f = facs[j];
+			if (hurui[f]) continue;
+			while (f <= m)
+			{
+				hurui[f]++;
+				f += facs[j];
+			}
+		}
+	}
+	vi ans;
+	REP(i, m + 1)
+	{
+		if (i == 0) continue;
+		if (hurui[i]) continue;
+		ans.push_back(i);
+	}
+	i64 x = ans.size();
+	cout << x << endl;
+	REP(i, x) { cout << ans[i] << endl; }
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
@@ -58,7 +81,7 @@ i64 modpow(i64 base, i64 ex, i64 mod)
 	i64 ans = 1;
 	while (ex)
 	{
-		if (ex & 1 == 1)
+		if (ex & 1)
 		{
 			ans *= base;
 			if (mod) ans %= mod;
