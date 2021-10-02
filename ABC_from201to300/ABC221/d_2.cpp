@@ -26,45 +26,29 @@ template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
 template <class T> inline void show(const vector<T> &v);
 
-vvi req(55, vi(4));
-i64 m;
-i64 n;
-i64 q;
-i64 ans = 0;
-
-void solve(const vector<i64> &a)
-{
-	i64 d = 0;
-	REP(i, q)
-	{
-		if (a[req[i][1]] - a[req[i][0]] == req[i][2]) d += req[i][3];
-	}
-	ans = max(ans, d);
-	return;
-}
-
-void dfs(const vector<i64> &a)
-{
-	if (a.size() == n + 1)
-	{
-		solve(a);
-		return;
-	}
-	for (i64 i = a.back(); i <= m; i++)
-	{
-		vi s = a;
-		s.push_back(i);
-		dfs(s);
-	}
-}
-
 int main()
 {
-	cin >> n >> m >> q;
-	REP(i, q) { cin >> req[i][0] >> req[i][1] >> req[i][2] >> req[i][3]; }
-	vi seed{1};
-	dfs(seed);
-	cout << ans << endl;
+	IN_i64(n);
+	vector<pii> e(2 * n);
+	REP(i, n)
+	{
+		i64 s, t;
+		cin >> s >> t;
+		s--;
+		e[i].first = s;
+		e[i].second = 1;
+		e[i + n].first = s + t;
+		e[i + n].second = -1;
+	}
+	SORT(e);
+	i64 people = 0;
+	vi cnt(n + 1);
+	REP(i, 2 * n - 1)
+	{
+		people += e[i].second;
+		cnt[people] += e[i + 1].first - e[i].first;
+	}
+	show(cnt);
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
@@ -131,7 +115,7 @@ template <class T> inline bool chmin(T &a, T b)
 template <class T> inline void show(const vector<T> &v)
 {
 	const i64 n = static_cast<i64>(v.size()) - 1;
-	for (i64 i = 0; i < n; i++)
+	for (i64 i = 1; i < n; i++)
 		cout << v[i] << " ";
 	cout << v[n] << "\n";
 }

@@ -7,7 +7,6 @@ using namespace std;
 using i64 = long long;
 using vi = vector<i64>;
 using vvi = vector<vi>;
-using pii = pair<i64, i64>;
 #define REP(i, n) for (i64 i = 0; i < static_cast<i64>(n); i++)
 #define IN_i64(n) \
 	i64 n; \
@@ -15,6 +14,9 @@ using pii = pair<i64, i64>;
 #define IN_vi(a, n) \
 	vi a((n)); \
 	REP(i, n) cin >> a[i];
+#define SHOW(v) \
+	REP(i, v.size() - 1) cout << v[i] << " "; \
+	cout << v.back() << "\n";
 #define SORT(a) sort(a.begin(), a.end())
 #define REVERSE(a) reverse(a.begin(), a.end())
 constexpr i64 INF64 = 1LL << 60LL;
@@ -24,47 +26,48 @@ inline i64 modinv(i64, i64);
 inline i64 gcd(i64, i64);
 template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
-template <class T> inline void show(const vector<T> &v);
 
-vvi req(55, vi(4));
-i64 m;
-i64 n;
-i64 q;
-i64 ans = 0;
-
-void solve(const vector<i64> &a)
-{
-	i64 d = 0;
-	REP(i, q)
-	{
-		if (a[req[i][1]] - a[req[i][0]] == req[i][2]) d += req[i][3];
-	}
-	ans = max(ans, d);
-	return;
-}
-
-void dfs(const vector<i64> &a)
-{
-	if (a.size() == n + 1)
-	{
-		solve(a);
-		return;
-	}
-	for (i64 i = a.back(); i <= m; i++)
-	{
-		vi s = a;
-		s.push_back(i);
-		dfs(s);
-	}
-}
-
+using pii = pair<i64, i64>;
 int main()
 {
-	cin >> n >> m >> q;
-	REP(i, q) { cin >> req[i][0] >> req[i][1] >> req[i][2] >> req[i][3]; }
-	vi seed{1};
-	dfs(seed);
-	cout << ans << endl;
+	IN_i64(n);
+	vector<pii> e(2 * n);
+	REP(i, n)
+	{
+		IN_i64(s);
+		IN_i64(t);
+		s--;
+		e[i].first = s;
+		e[i].second = 1;
+		e[i + n].first = s + t;
+		e[i + n].second = -1;
+	}
+	SORT(e);
+	i64 now = 0;
+	i64 people = 0;
+	vi cnt(n);
+	REP(i, 2 * n)
+	{
+		if (e[i].second == -1)
+		{
+			people--;
+			if (now != e[i].first)
+			{
+				cnt[people] += e[i].first - now;
+				now = e[i].first;
+			}
+		}
+		if (e[i].second == 1)
+		{
+			people++;
+			if (now != e[i].first)
+			{
+				cnt[people] += e[i].first - now;
+				now = e[i].first;
+			}
+		}
+	}
+	REP(i, n) { cout << cnt[i] << endl; }
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
@@ -126,12 +129,4 @@ template <class T> inline bool chmin(T &a, T b)
 		return true;
 	}
 	return false;
-}
-
-template <class T> inline void show(const vector<T> &v)
-{
-	const i64 n = static_cast<i64>(v.size()) - 1;
-	for (i64 i = 0; i < n; i++)
-		cout << v[i] << " ";
-	cout << v[n] << "\n";
 }

@@ -7,7 +7,6 @@ using namespace std;
 using i64 = long long;
 using vi = vector<i64>;
 using vvi = vector<vi>;
-using pii = pair<i64, i64>;
 #define REP(i, n) for (i64 i = 0; i < static_cast<i64>(n); i++)
 #define IN_i64(n) \
 	i64 n; \
@@ -24,47 +23,12 @@ inline i64 modinv(i64, i64);
 inline i64 gcd(i64, i64);
 template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
-template <class T> inline void show(const vector<T> &v);
-
-vvi req(55, vi(4));
-i64 m;
-i64 n;
-i64 q;
-i64 ans = 0;
-
-void solve(const vector<i64> &a)
-{
-	i64 d = 0;
-	REP(i, q)
-	{
-		if (a[req[i][1]] - a[req[i][0]] == req[i][2]) d += req[i][3];
-	}
-	ans = max(ans, d);
-	return;
-}
-
-void dfs(const vector<i64> &a)
-{
-	if (a.size() == n + 1)
-	{
-		solve(a);
-		return;
-	}
-	for (i64 i = a.back(); i <= m; i++)
-	{
-		vi s = a;
-		s.push_back(i);
-		dfs(s);
-	}
-}
 
 int main()
 {
-	cin >> n >> m >> q;
-	REP(i, q) { cin >> req[i][0] >> req[i][1] >> req[i][2] >> req[i][3]; }
-	vi seed{1};
-	dfs(seed);
-	cout << ans << endl;
+	IN_i64(a);
+	IN_i64(b);
+	cout << modpow(32, a - b) << endl;
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
@@ -126,12 +90,4 @@ template <class T> inline bool chmin(T &a, T b)
 		return true;
 	}
 	return false;
-}
-
-template <class T> inline void show(const vector<T> &v)
-{
-	const i64 n = static_cast<i64>(v.size()) - 1;
-	for (i64 i = 0; i < n; i++)
-		cout << v[i] << " ";
-	cout << v[n] << "\n";
 }

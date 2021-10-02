@@ -7,14 +7,16 @@ using namespace std;
 using i64 = long long;
 using vi = vector<i64>;
 using vvi = vector<vi>;
-using pii = pair<i64, i64>;
-#define REP(i, n) for (i64 i = 0; i < static_cast<i64>(n); i++)
+#define REP(i, n) for (i64 i = 0; i < (n); i++)
 #define IN_i64(n) \
 	i64 n; \
 	cin >> n;
 #define IN_vi(a, n) \
 	vi a((n)); \
 	REP(i, n) cin >> a[i];
+#define SHOW(v) \
+	REP(i, v.size() - 1) cout << v[i] << " "; \
+	cout << v.back() << "\n";
 #define SORT(a) sort(a.begin(), a.end())
 #define REVERSE(a) reverse(a.begin(), a.end())
 constexpr i64 INF64 = 1LL << 60LL;
@@ -24,46 +26,53 @@ inline i64 modinv(i64, i64);
 inline i64 gcd(i64, i64);
 template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
-template <class T> inline void show(const vector<T> &v);
-
-vvi req(55, vi(4));
-i64 m;
-i64 n;
-i64 q;
-i64 ans = 0;
-
-void solve(const vector<i64> &a)
-{
-	i64 d = 0;
-	REP(i, q)
-	{
-		if (a[req[i][1]] - a[req[i][0]] == req[i][2]) d += req[i][3];
-	}
-	ans = max(ans, d);
-	return;
-}
-
-void dfs(const vector<i64> &a)
-{
-	if (a.size() == n + 1)
-	{
-		solve(a);
-		return;
-	}
-	for (i64 i = a.back(); i <= m; i++)
-	{
-		vi s = a;
-		s.push_back(i);
-		dfs(s);
-	}
-}
 
 int main()
 {
-	cin >> n >> m >> q;
-	REP(i, q) { cin >> req[i][0] >> req[i][1] >> req[i][2] >> req[i][3]; }
-	vi seed{1};
-	dfs(seed);
+	string n;
+	cin >> n;
+	vi dig;
+	i64 zero = 0;
+	for (auto &&i : n)
+	{
+		if (i - '0' == 0)
+			zero++;
+		else
+			dig.emplace_back(i - '0');
+	}
+	i64 aa = (1 << dig.size()) - 1;
+	i64 ans = 0;
+	REP(allstate, aa)
+	{
+		vi a, b;
+		if (!allstate) continue;
+		REP(i, dig.size())
+		{
+			if ((allstate >> i) & 1) { a.push_back(dig[i]); }
+			else
+			{
+				b.push_back(dig[i]);
+			}
+		}
+		SORT(a);
+		i64 a_num = 0;
+		while (!a.empty())
+		{
+			a_num *= 10;
+			a_num += a.back();
+			a.pop_back();
+		}
+		SORT(b);
+		i64 b_num = 0;
+		while (!b.empty())
+		{
+			b_num *= 10;
+			b_num += b.back();
+			b.pop_back();
+		}
+		ans = max(ans, a_num * b_num);
+	}
+	REP(i, zero) { ans *= 10; }
 	cout << ans << endl;
 }
 
@@ -126,12 +135,4 @@ template <class T> inline bool chmin(T &a, T b)
 		return true;
 	}
 	return false;
-}
-
-template <class T> inline void show(const vector<T> &v)
-{
-	const i64 n = static_cast<i64>(v.size()) - 1;
-	for (i64 i = 0; i < n; i++)
-		cout << v[i] << " ";
-	cout << v[n] << "\n";
 }
