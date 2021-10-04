@@ -28,17 +28,57 @@ template <class T> inline void show(const vector<T> &v);
 
 int main()
 {
-	IN_i64(a);
-	IN_i64(b);
-	IN_i64(w);
-	w *= 1000;
-	i64 mx = (w + b - 1) / b;
-	if (a * mx > w)
+	string s1, s2, s3;
+	cin >> s1 >> s2 >> s3;
+	vector<char> cset;
+	for (auto &&i : s1)
+		cset.push_back(i);
+
+	for (auto &&i : s2)
+		cset.push_back(i);
+
+	for (auto &&i : s3)
+		cset.push_back(i);
+
+	
+	SORT(cset);
+	cset.erase(unique(cset.begin(), cset.end()), cset.end());
+	if (cset.size() > 10)
 	{
-		cout << "UNSATISFIABLE" << endl;
+		cout << "UNSOLVABLE" << endl;
 		return 0;
 	}
-	cout << mx << " " << w / a << endl;
+	vi nums{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+	do
+	{
+		vi alpha(26);
+		REP(i, cset.size()) { alpha[cset[i] - 'a'] = nums[i]; }
+		if (alpha[s1[0] - 'a'] == 0 || alpha[s2[0] - 'a'] == 0 || alpha[s3[0] - 'a'] == 0) continue;
+		i64 n1 = 0, n2 = 0, n3 = 0;
+		for (auto &&i : s1)
+		{
+			n1 *= 10;
+			n1 += alpha[i - 'a'];
+		}
+		for (auto &&i : s2)
+		{
+			n2 *= 10;
+			n2 += alpha[i - 'a'];
+		}
+		for (auto &&i : s3)
+		{
+			n3 *= 10;
+			n3 += alpha[i - 'a'];
+		}
+		if (n1 + n2 == n3)
+		{
+			cout << n1 << "\n" << n2 << "\n" << n3 << endl;
+			return 0;
+		}
+
+	} while (next_permutation(nums.begin(), nums.end()));
+	cout << "UNSOLVABLE" << endl;
+	return 0;
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)

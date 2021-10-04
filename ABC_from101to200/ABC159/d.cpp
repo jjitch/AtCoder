@@ -28,17 +28,13 @@ template <class T> inline void show(const vector<T> &v);
 
 int main()
 {
-	IN_i64(a);
-	IN_i64(b);
-	IN_i64(w);
-	w *= 1000;
-	i64 mx = (w + b - 1) / b;
-	if (a * mx > w)
-	{
-		cout << "UNSATISFIABLE" << endl;
-		return 0;
-	}
-	cout << mx << " " << w / a << endl;
+	IN_i64(n);
+	IN_vi(a, n);
+	i64 acc = 0;
+	vi cnt(n + 1);
+	REP(i, n) { cnt[a[i]]++; }
+	REP(i, n + 1) { acc += ((cnt[i] * (cnt[i] - 1)) >> 1); }
+	REP(i, n) { cout << acc - cnt[a[i]] + 1 << endl; }
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
