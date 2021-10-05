@@ -33,7 +33,7 @@ int main()
 	IN_i64(m);
 	vi vert(h);
 	vi hori(w);
-	vector<pii> bomb(m);
+	set<pii> bomb;
 	REP(i, m)
 	{
 		IN_i64(a);
@@ -42,26 +42,27 @@ int main()
 		b--;
 		vert[a]++;
 		hori[b]++;
-		bomb[i] = pii(a, b);
+		bomb.emplace(a, b);
 	}
 	i64 vertMax = 0;
 	i64 horiMax = 0;
 	REP(i, h) { chmax(vertMax, vert[i]); }
 	REP(i, w) { chmax(horiMax, hori[i]); }
-	show(vert);
-	show(hori);
-	set<i64> vertidx, horiidx;
-	REP(i, h) if (vert[i] == vertMax) vertidx.insert(i);
-	REP(i, w) if (hori[i] == horiMax) horiidx.insert(i);
-	cout << vertMax << " " << horiMax << endl;
-	REP(i, m)
+	vector<i64> vertidx, horiidx;
+	REP(i, h) if (vert[i] == vertMax) vertidx.push_back(i);
+	REP(i, w) if (hori[i] == horiMax) horiidx.push_back(i);
+	for (auto &&i : vertidx)
 	{
-		bool vertContain = vertidx.find(bomb[i].first) != vertidx.end();
-		bool horiContain = horiidx.find(bomb[i].second) != horiidx.end();
-		if ()
-		cout << vertMax + horiMax << endl;
-		exit(0);
+		for (auto &&j : horiidx)
+		{
+			if (bomb.find({i, j}) == bomb.end())
+			{
+				cout << vertMax + horiMax << endl;
+				return 0;
+			}
+		}
 	}
+
 	cout << vertMax + horiMax - 1 << endl;
 }
 
