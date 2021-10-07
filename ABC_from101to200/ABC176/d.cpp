@@ -56,13 +56,26 @@ int main()
 	{
 		pii now = q.front();
 		q.pop_front();
-		REP(i, 4) { pii adj = {now.first + dx[i], now.second + dy[i]}; 
-		if (maze[adj.first][adj.second]) {
-			if (chmin(cost[adj]))
+		REP(i, 4)
+		{
+			pii adj = {now.first + dx[i], now.second + dy[i]};
+			if (adj.first < 0 || h <= adj.first || adj.second < 0 || w <= adj.second) continue;
+			if (!maze[adj.first][adj.second]) continue;
+			if (chmin(cost[adj.first][adj.second], cost[now.first][now.second])) q.push_front(adj);
 		}
+		REP(i, 5) REP(j, 5)
+		{
+			pii adj = {now.first + i - 2, now.second + j - 2};
+			if (adj.first < 0 || h <= adj.first || adj.second < 0 || w <= adj.second) continue;
+			if (!maze[adj.first][adj.second]) continue;
+			if (chmin(cost[adj.first][adj.second], cost[now.first][now.second] + 1)) q.push_back(adj);
 		}
 	}
-	
+	if (cost[d.first][d.second] == INF64) { cout << -1 << endl; }
+	else
+	{
+		cout << cost[d.first][d.second] << endl;
+	}
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
