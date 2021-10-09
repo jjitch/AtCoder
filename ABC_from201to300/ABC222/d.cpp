@@ -18,7 +18,7 @@ using pii = pair<i64, i64>;
 #define SORT(a) sort(a.begin(), a.end())
 #define REVERSE(a) reverse(a.begin(), a.end())
 constexpr i64 INF64 = 1LL << 60LL;
-constexpr i64 MOD = 1000000007;
+constexpr i64 MOD = 998244353;
 inline i64 modpow(i64, i64, i64 = 0);
 inline i64 modinv(i64, i64);
 inline i64 gcd(i64, i64);
@@ -29,31 +29,34 @@ template <class T> inline void show(const vector<T> &v);
 int main()
 {
 	IN_i64(n);
-	IN_i64(x);
-	IN_i64(m);
-	i64 ans = 0;
-	vi when(m);
-	vi accum(m);
-	bool skipped = false;
-	for (i64 i = 0; i < n; i++)
+	IN_vi(a, n);
+	IN_vi(b, n);
+	vvi dp(3010, vi(3010, 0));
+	for (i64 i = a[0]; i <= b[0]; i++)
 	{
-		if (when[x] && !skipped)
+		dp[0][i]++;
+	}
+	for (i64 i = 1; i < n; i++)
+	{
+		i64 prev_sum = 0;
+		REP(j, a[i])
 		{
-			i64 pre = when[x];
-			i64 span = i - pre + 1;
-			i64 mass = accum[i] - accum[pre - 1];
-			i64 rem = n - i;
-			i64 times = rem / span;
-			ans += mass * times;
-			n -= span * times - 1;
-			skipped = true;
-			continue;
+			prev_sum += dp[i - 1][j];
+			prev_sum %= MOD;
 		}
-		if (!skipped) when[x] = i + 1;
-		ans += x;
-		if (!skipped) accum[i + 1] = ans;
-		x *= x;
-		x %= m;
+		dp[i][a[i]] += prev_sum + dp[i - 1][a[i]];
+		dp[i][a[i]] %= MOD;
+		for (i64 j = a[i] + 1; j <= b[i]; j++)
+		{
+			dp[i][j] += dp[i - 1][j] + dp[i][j - 1];
+			dp[i][j] %= MOD;
+		}
+	}
+	i64 ans = 0;
+	for (i64 i = a[n - 1]; i <= b[n - 1]; i++)
+	{
+		ans += dp[n - 1][i];
+		ans %= MOD;
 	}
 	cout << ans << endl;
 }

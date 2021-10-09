@@ -26,36 +26,40 @@ template <class T> inline bool chmax(T &a, T b);
 template <class T> inline bool chmin(T &a, T b);
 template <class T> inline void show(const vector<T> &v);
 
+struct member
+{
+	string hand;
+	i64 id;
+	i64 score;
+	men() : score(0) {}
+};
+
+bool operator<(men a, men b)
+{
+	return a.score == b.score ? a.id < b.id : a.score > b.score;
+}
+
 int main()
 {
 	IN_i64(n);
-	IN_i64(x);
 	IN_i64(m);
-	i64 ans = 0;
-	vi when(m);
-	vi accum(m);
-	bool skipped = false;
-	for (i64 i = 0; i < n; i++)
+	vector<member> members(2 * n);
+	REP(i, 2 * n) members[i].id = i;
+	REP(i, 2 * n) { cin >> members[i].hand; }
+	REP(i, m)
 	{
-		if (when[x] && !skipped)
+		REP(j, n)
 		{
-			i64 pre = when[x];
-			i64 span = i - pre + 1;
-			i64 mass = accum[i] - accum[pre - 1];
-			i64 rem = n - i;
-			i64 times = rem / span;
-			ans += mass * times;
-			n -= span * times - 1;
-			skipped = true;
-			continue;
+			if (members[2 * j].hand[i] == 'G' && members[2 * j + 1].hand[i] == 'C') members[2 * j].score++;
+			if (members[2 * j].hand[i] == 'C' && members[2 * j + 1].hand[i] == 'P') members[2 * j].score++;
+			if (members[2 * j].hand[i] == 'P' && members[2 * j + 1].hand[i] == 'G') members[2 * j].score++;
+			if (members[2 * j + 1].hand[i] == 'G' && members[2 * j].hand[i] == 'C') members[2 * j + 1].score++;
+			if (members[2 * j + 1].hand[i] == 'C' && members[2 * j].hand[i] == 'P') members[2 * j + 1].score++;
+			if (members[2 * j + 1].hand[i] == 'P' && members[2 * j].hand[i] == 'G') members[2 * j + 1].score++;
 		}
-		if (!skipped) when[x] = i + 1;
-		ans += x;
-		if (!skipped) accum[i + 1] = ans;
-		x *= x;
-		x %= m;
+		sort(members.begin(), members.end());
 	}
-	cout << ans << endl;
+	REP(i, 2 * n) { cout << members[i].id + 1 << endl; }
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)

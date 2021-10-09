@@ -29,33 +29,8 @@ template <class T> inline void show(const vector<T> &v);
 int main()
 {
 	IN_i64(n);
-	IN_i64(x);
-	IN_i64(m);
-	i64 ans = 0;
-	vi when(m);
-	vi accum(m);
-	bool skipped = false;
-	for (i64 i = 0; i < n; i++)
-	{
-		if (when[x] && !skipped)
-		{
-			i64 pre = when[x];
-			i64 span = i - pre + 1;
-			i64 mass = accum[i] - accum[pre - 1];
-			i64 rem = n - i;
-			i64 times = rem / span;
-			ans += mass * times;
-			n -= span * times - 1;
-			skipped = true;
-			continue;
-		}
-		if (!skipped) when[x] = i + 1;
-		ans += x;
-		if (!skipped) accum[i + 1] = ans;
-		x *= x;
-		x %= m;
-	}
-	cout << ans << endl;
+	IN_vi(a, n);
+	
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
