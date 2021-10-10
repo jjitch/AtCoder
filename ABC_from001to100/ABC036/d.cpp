@@ -29,7 +29,12 @@ template <class T> inline void show(const vector<T> &v);
 int main()
 {
 	IN_i64(n);
-	vvi G(n, vi());
+	vvi G(n);
+	vvi bw(n, vi(2));
+	vvi child(n);
+	vi visited(n);
+	stack<i64> s;
+	stack<i64> backward;
 	REP(i, n - 1)
 	{
 		IN_i64(a);
@@ -39,24 +44,44 @@ int main()
 		G[a].emplace_back(b);
 		G[b].emplace_back(a);
 	}
-	vvi bw(n, vi(2));
-	vi visited(n);
-	stack<i64> s;
 	s.push(0);
 	visited[0] = 1;
 	while (!s.empty())
 	{
 		i64 now = s.top();
 		s.pop();
+		backward.emplace(now);
 		for (auto &&i : G[now])
 		{
 			if (visited[i]) continue;
 			visited[i] = 1;
-			
+			s.emplace(i);
+			child[now].emplace_back(i);
 		}
-		
 	}
-	
+	while (!backward.empty())
+	{
+		i64 t = backward.top();
+		backward.pop();
+		if (!child[t].size())
+		{
+			bw[t][0]++;
+			bw[t][1]++;
+			continue;
+		}
+		i64 black = 1;
+		i64 white = 1;
+		for (auto &&i : child[t])
+		{
+			black *= bw[i][1];
+			black %= MOD;
+			white *= bw[i][0] + bw[i][1];
+			white %= MOD;
+		}
+		bw[t][0] = black;
+		bw[t][1] = white;
+	}
+	cout << (bw[0][0] + bw[0][1]) % MOD << endl;
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)

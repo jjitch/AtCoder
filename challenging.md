@@ -1,9 +1,9 @@
 # 見たけどよくわからなかった問題、アルゴリズムを書いていく
 
 ## 木DP
-- [ ] [ABC036 D](https://atcoder.jp/contests/abc036/tasks/abc036_d)
+- [x] [ABC036 D](https://atcoder.jp/contests/abc036/tasks/abc036_d)
 - [ ] [TDPC N](https://atcoder.jp/contests/tdpc/tasks/tdpc_tree)
-- [ ] [EDPC P](https://atcoder.jp/contests/dp/tasks/dp_p)
+- [x] [EDPC P](https://atcoder.jp/contests/dp/tasks/dp_p)
 
 ## 全方位木DP
 - [ ] [ABC222 F](https://atcoder.jp/contests/abc222/tasks/abc222_f)
