@@ -29,6 +29,33 @@ template <class T> inline void show(const vector<T> &v);
 int main()
 {
 	IN_i64(n);
+	vvi G(n, vi());
+	REP(i, n - 1)
+	{
+		IN_i64(a);
+		IN_i64(b);
+		a--;
+		b--;
+		G[a].emplace_back(b);
+		G[b].emplace_back(a);
+	}
+	vvi bw(n, vi(2));
+	vi visited(n);
+	stack<i64> s;
+	s.push(0);
+	visited[0] = 1;
+	while (!s.empty())
+	{
+		i64 now = s.top();
+		s.pop();
+		for (auto &&i : G[now])
+		{
+			if (visited[i]) continue;
+			visited[i] = 1;
+			
+		}
+		
+	}
 	
 }
 
