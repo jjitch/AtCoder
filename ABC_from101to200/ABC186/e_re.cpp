@@ -28,16 +28,7 @@ template <class T> inline void show(const vector<T> &v);
 
 int main()
 {
-	IN_i64(n);
-	IN_vi(a, n);
-	vi cnt(n);
-	i64 ans = 0;
-	REP(i, n)
-	{
-		ans += i >= a[i] ? cnt[i - a[i]] : 0;
-		if (i + a[i] < n) cnt[i + a[i]]++;
-	}
-	cout << ans << endl;
+	
 }
 
 i64 modpow(i64 base, i64 ex, i64 mod)
